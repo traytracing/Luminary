@@ -1,0 +1,12 @@
+[submodule "Luminary/vendor/glm"]
+	path = Luminary/vendor/glm
+	url = https://github.com/g-truc/glm
+[submodule "Luminary/vendor/spdlog"]
+	path = Luminary/vendor/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "Luminary/vendor/GLFW"]
+	path = Luminary/vendor/GLFW
+	url = https://github.com/traytracing/glfw.git
+[submodule "Luminary/vendor/imgui"]
+	path = Luminary/vendor/imgui
+	url = https://github.com/traytracing/imgui.git

@@ -1,0 +1,397 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Resource Files\Shaders">
+      <UniqueIdentifier>{03705e7e-8751-4ddb-b701-30396dc32dd8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Shapes">
+      <UniqueIdentifier>{f9a7a351-cfd2-4b4b-9c37-36c7ff3de4dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Renderers">
+      <UniqueIdentifier>{ce9a0919-95c6-4c61-99c3-9d882a5846fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Programs">
+      <UniqueIdentifier>{164ced8b-b31e-4ca2-aad4-5782fffe0aa9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Buffers">
+      <UniqueIdentifier>{a397ffd6-c33b-40b3-b576-dcb32bd5b3ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\imgui">
+      <UniqueIdentifier>{6c87c493-e98d-4bbb-8303-19785a346482}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\imgui">
+      <UniqueIdentifier>{23d5cc12-eb3d-4c80-923b-0ecbfd653ebb}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="glad.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NodeCurve.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Canvas.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FBOTexture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InputManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stb.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Layer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ShapeTexture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Simulation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EBO.cpp">
+      <Filter>Source Files\Buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="FBO.cpp">
+      <Filter>Source Files\Buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="VAO.cpp">
+      <Filter>Source Files\Buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="VBO.cpp">
+      <Filter>Source Files\Buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderProgram.cpp">
+      <Filter>Source Files\Programs</Filter>
+    </ClCompile>
+    <ClCompile Include="ComputeProgram.cpp">
+      <Filter>Source Files\Programs</Filter>
+    </ClCompile>
+    <ClCompile Include="SSBO.cpp">
+      <Filter>Source Files\Buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="NbodyRenderer.cpp">
+      <Filter>Source Files\Renderers</Filter>
+    </ClCompile>
+    <ClCompile Include="SkyRenderer.cpp">
+      <Filter>Source Files\Renderers</Filter>
+    </ClCompile>
+    <ClCompile Include="stb_impl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PBO.cpp">
+      <Filter>Source Files\Buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_widgets.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_demo.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_draw.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_tables.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="backends\imgui_impl_glfw.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="backends\imgui_impl_opengl3.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="RenderProgram.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EBO.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VAO.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VBO.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DefaultSphereModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SphereSVModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ComputeProgram.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SSBO.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SurfaceVertex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NodeCurve.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FBO.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FBOTexture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Canvas.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InputManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Artefactum.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SphereCanvasSVModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Layer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ShapeTexture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BruskPoint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Brush.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Simulation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NbodyRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Spline.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StarPoint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PIMath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SkyRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BlackholePoint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TrailPoint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AxisPoint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PBO.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui_internal.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imstb_rectpack.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imstb_textedit.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imstb_truetype.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imconfig.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="backends\imgui_impl_glfw.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="backends\imgui_impl_opengl3.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="backends\imgui_impl_opengl3_loader.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="default.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="default.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="default.geom">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="stamp.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="stamp.geom">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="stamp.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Fill.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Fill.geom">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Fill.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="stamp2D.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="BruskCompute.comp">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Layer.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Layer.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="line.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="line.geom">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="line.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Planet.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Planet2.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="SpaceDust.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="SpaceDust.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="blackhole.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Star.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Star.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Star.geom">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="grid.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="grid.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="InterpolateData.comp">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="axis.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="axis.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Axis.geom">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="brick.png">
+      <Filter>Resource Files\Shapes</Filter>
+    </Image>
+    <Image Include="circle.png">
+      <Filter>Resource Files\Shapes</Filter>
+    </Image>
+    <Image Include="square.png">
+      <Filter>Resource Files\Shapes</Filter>
+    </Image>
+    <Image Include="squareBinary.png">
+      <Filter>Resource Files\Shapes</Filter>
+    </Image>
+    <Image Include="circleBinary.png">
+      <Filter>Resource Files\Shapes</Filter>
+    </Image>
+    <Image Include="testbrush%28actually a texture%29.png">
+      <Filter>Resource Files\Shapes</Filter>
+    </Image>
+    <Image Include="star0.png">
+      <Filter>Resource Files\Shapes</Filter>
+    </Image>
+    <Image Include="star5.png">
+      <Filter>Resource Files\Shapes</Filter>
+    </Image>
+    <Image Include="star1.png">
+      <Filter>Resource Files\Shapes</Filter>
+    </Image>
+    <Image Include="star2.png">
+      <Filter>Resource Files\Shapes</Filter>
+    </Image>
+    <Image Include="star3.png">
+      <Filter>Resource Files\Shapes</Filter>
+    </Image>
+    <Image Include="star4.png">
+      <Filter>Resource Files\Shapes</Filter>
+    </Image>
+    <Image Include="stars-special.png">
+      <Filter>Resource Files\Shapes</Filter>
+    </Image>
+    <Image Include="smallstars.png">
+      <Filter>Resource Files\Shapes</Filter>
+    </Image>
+  </ItemGroup>
+</Project>
