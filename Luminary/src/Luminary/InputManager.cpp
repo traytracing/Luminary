@@ -23,20 +23,9 @@ void InputManager::window_size_callback(GLFWwindow* window, int width, int heigh
 //change later
 int curView = 6;
 
-// change zoom later
 void InputManager::scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	InputManager* self = static_cast<InputManager*>(glfwGetWindowUserPointer(window));
 	
-	if (yoffset < 0) {
-		if(curView > 0) curView--;
-	}
-	else {
-		if(curView < 59) curView++;
-	}
-	self->zoom += -yoffset * 0.05f; // zoom speed 
-	if (self->zoom < 0.1f) self->zoom = 0.1f;
-
-	//std::cout << self->zoom << std::endl;
 }
 
 /// <summary>
@@ -45,7 +34,7 @@ void InputManager::scroll_callback(GLFWwindow* window, double xoffset, double yo
 GLfloat realTime = 0.0f;
 GLfloat deltaRealTime = 0.0f;
 GLfloat lastRealTime = 0.0f;
-extern int frameIndex;
+int frameIndex = 0;
 
 void InputManager::Update(GLFWwindow* window) {
 	// REVIEW LATER:
@@ -59,10 +48,11 @@ void InputManager::Update(GLFWwindow* window) {
 	if (firstFrame) {
 		firstFrame = false;
 
+		/*
 		std::cout << "\n\n\n"        // reserve 3 lines
 			<< "\x1b[3A"       // move up 3 lines
 			<< "\x1b[s"        // save cursor pos here
-			<< std::flush;
+			<< std::flush;*/
 	}
 
 	int width, height;
@@ -73,7 +63,7 @@ void InputManager::Update(GLFWwindow* window) {
 	std::cout << std::fixed << std::setprecision(2);
 
 	// every frame:
-	std::cout
+	/*std::cout
 		<< "\x1b[u"                       // restore cursor to start of block
 		// line 1
 		<< "Window size: " << std::setw(4) << width << " x "
@@ -84,15 +74,15 @@ void InputManager::Update(GLFWwindow* window) {
 		// line 3
 		<< "Time:  " << std::setw(8) << realTime
 		<< " | View: " << std::setw(8) << curView << "\x1b[K"
-		<< std::flush;
+		<< std::flush; */
 	
 
 	UpdateCameras(window);
 }
 
 extern 	std::vector<std::pair<std::vector<glm::vec3>, GLfloat>> i_objectsPositionsAcrossTime;
-
-extern int maxFrames;
+//
+//extern int maxFrames;
 
 // change later to be inside camera class
 void InputManager::UpdateCameras(GLFWwindow* window) {
@@ -120,13 +110,13 @@ void InputManager::UpdateCameras(GLFWwindow* window) {
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) POVCamera.position += POVCamera.speed * POVCamera.up;
 	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) POVCamera.position += POVCamera.speed * -POVCamera.up;
 	
-	
+	/*
 	if (POVCamera.cameraLock) {
 		POVCamera.orientation = -1.0f * glm::normalize(POVCamera.position);
 		if (POVCamera.position == glm::vec3(0)) POVCamera.orientation = glm::vec3(1); // QUICK FIX FIX LATER
 		//orientation = -1.0f * glm::normalize(glm::vec3(0, 1, 1));
 		//orientation =  glm::normalize(lookat - object);
-		if (frameIndex < 0 || frameIndex > maxFrames) {
+		if (frameIndex < 0 || frameIndex > 1000) {
 			POVCamera.object = glm::vec3(1); // should be orientaiton, not object
 		}
 		else {
@@ -139,10 +129,10 @@ void InputManager::UpdateCameras(GLFWwindow* window) {
 		//orientation = lookat;
 		//QUICKF IX
 		
-	}
+	}*/
 	
 	// orientation stuff
-	if (!POVCamera.cameraLock) {
+	if (true) {
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
 		if (POVCamera.firstClick) {
@@ -186,25 +176,3 @@ void InputManager::UpdateCameras(GLFWwindow* window) {
 	SkyCamera.orientation = POVCamera.orientation;
 	SkyCamera.UpdateMatrix(45.0f, 0.1f, 100000.0f, width, height);
 }
-
-/*
-
-double mouseX, mouseY;
-	glfwGetCursorPos(window, &mouseX, &mouseY);
-
-
-
-	isPanning = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
-	if (isPanning) {
-		double dx = mouseX - lastMouseX;
-		double dy = mouseY - lastMouseY;
-
-		panOffsetX += dx * zoom;
-		panOffsetY -= dy * zoom;
-
-	}
-
-	lastMouseX = mouseX;
-
-	lastMouseY = mouseY;
-*/

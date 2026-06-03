@@ -5,7 +5,6 @@
 #include <glad/glad.h>
 
 struct BlackholePoint {
-	glm::vec3 position;
 	glm::vec2 bNormal;
 	GLfloat mass;
 	glm::vec2 size;

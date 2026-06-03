@@ -7,10 +7,10 @@
 
 class Simulation {
 	const GLfloat k = 10.0f;
-	float UpdateSim(std::vector<std::pair<std::vector<std::pair<glm::vec3, glm::vec3>>, GLfloat>>& sim, GLfloat deltaTime, GLfloat simTime);
+	float UpdateSim(std::vector<std::pair<std::vector<std::pair<glm::vec4, glm::vec4>>, GLfloat>>& sim, GLfloat deltaTime, GLfloat simTime);
 
 public:
-	std::vector<std::pair<std::vector<glm::vec3>, GLfloat>> makeFullSim();
+	std::vector<std::pair<std::vector<glm::vec4>, GLfloat>> makeFullSim();
 };
 
 #endif

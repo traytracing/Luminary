@@ -3,15 +3,42 @@
 #include <thread>
 #include <string>
 #include "Luminary/Core/PBO.h"
+#include "Platform/OpenGL/imgui_impl_glfw.h"
+#include "Platform/OpenGL/imgui_impl_opengl3.h"
 
-int maxFrames = 0;
-int totalSimTime = 30;
+GLFWwindow* RenderSystem::MakeWindow() {
+	static bool initialized = false;
+	if (initialized) {
+		throw std::runtime_error("Window already initialized");
+	}
+	initialized = true;
 
-void RenderSystem::InputData(int timestampsCount, std::vector<double> timestamps, int objectCount, std::vector<std::vector<glm::vec3>> positions) {
-	maxFrames = 165* totalSimTime -1;
-	//nbodyRenderer.InterpolateData(timestampsCount, timestamps, objectCount, positions); // upgrade later
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+	glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+
+	GLFWwindow* window = glfwCreateWindow(settings.w_Dimensions.x, settings.w_Dimensions.y, "Canvas", NULL, NULL);
+	glfwMakeContextCurrent(window);
+
+	gladLoadGL();
+	glViewport(0, 0, settings.w_Dimensions.x, settings.w_Dimensions.y);
+
+
+	ImGui::CreateContext();
+
+	ImGuiIO& io = ImGui::GetIO();
+	(void)io;
+
+	const char* glsl_version = "#version 460";
+
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init(glsl_version);
+	ImGui::StyleColorsDark();
+	return window;
 }
-bool renderGrid = true;
+
 
 void RenderSystem::Render() {
 	//grid
@@ -32,12 +59,10 @@ void RenderSystem::Render() {
 	POVCamera.UploadMatrix(gridRenderProgram, "MVP");
 
 	vaoooo.Bind();
-	if(renderGrid)
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
-int fps = 165; // fix main loop with realtime fps
-int frameIndex = 0;
+int fps = 120; // fix main loop with realtime fps
 extern int curView;
 extern glm::vec4 trailColor;
 int mult = 1;
@@ -45,8 +70,6 @@ extern int randomNum;
 extern GLfloat realTime;
 
 #include "imgui.h"
-#include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_opengl3.h"
 
 #include <cstdio>
 #include <stdexcept>
@@ -93,24 +116,31 @@ void finish_ffmpeg_pipe(FILE* ffmpegPipe) {
 
 
 //TODO lock the resolution when rendering 
-void RenderSystem::Begin() {
+void RenderSystem::Run() {
+	inputDataProcessor.SetFile("blah.lumen");
+	inputDataProcessor.AddRenderProgram(nbodyRenderer.blackholeRenderProgram);
+	// ETC LATER inputDataProcessor.AddRenderProgram(nbodyRenderer.blackholeRenderProgram);
+
+
+	
 	int width = 1920; int height = 1080;
 	//glfwSwapInterval(0);
 	glReadBuffer(GL_BACK);
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
-	// get file first then do it 
+	// get file first then do it
 	PBO PBO1;
 	PBO1.Bind();
 	const int bytesPerPixel = 4; // BGRA8
 	const GLsizeiptr frameBytes = GLsizeiptr(width) * height * bytesPerPixel;
 	glBufferData(GL_PIXEL_PACK_BUFFER, frameBytes, nullptr, GL_STREAM_READ);
 	glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-	FILE* ffmpegPipe = start_ffmpeg_pipe(width, height, fps, "C:\\Temp\\capture.mp4"); // your function
-
+	//FILE* ffmpegPipe = start_ffmpeg_pipe(width, height, fps, "C:\\Temp\\capture.mp4"); // your function
+	int frame = 0;
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
+		inputDataProcessor.UpdatePositionData(frame);
 
-		
+
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
@@ -128,7 +158,7 @@ void RenderSystem::Begin() {
 		ImGui::PushStyleColor(ImGuiCol_SliderGrab, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));   // handle
 		ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, ImVec4(1.0f, 0.2f, 0.2f, 1.0f)); // active handle
 
-		ImGui::SliderInt("FrameIndex: ", &frameIndex, 0, 15599);
+		//ImGui::SliderInt("FrameIndex: ", &frameIndex, 0, 15599);
 
 		ImGui::PopStyleColor(3);
 		ImGui::PopStyleVar(2);
@@ -142,14 +172,14 @@ void RenderSystem::Begin() {
 		if (ImGui::Button("Reverse")) {
 			mult *= -1;
 		}
-		ImGui::Checkbox("Show grid", &renderGrid);
+		//ImGui::Checkbox("Show grid", &renderGrid);
 
 		ImGui::End();
 		ImGui::SetNextWindowSize(ImVec2(240, 100)); // width=600, height=200
 
 		ImGui::Begin("Simulation Time", nullptr,
 			ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
-		ImGui::Text("%.1f", frameIndex / 165.0f);
+		//ImGui::Text("%.1f", frameIndex / 165.0f);
 
 
 		ImGui::End();
@@ -191,48 +221,49 @@ void RenderSystem::Begin() {
 
 
 		// Rendering
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-		PBO1.Bind();
-		glPixelStorei(GL_PACK_ALIGNMENT, 1);
+	/*
+	PBO1.Bind();
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
-		// 1) Ask GL to write pixel data into the PBO (note the null pointer!)
-		glReadPixels(0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+	// 1) Ask GL to write pixel data into the PBO (note the null pointer!)
+	glReadPixels(0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, 0);
 
-		// 2) Map the PBO to get a CPU pointer
-		GLubyte* ptr = (GLubyte*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
-		if (ptr) {
-			// 3) Write exactly one frame to ffmpeg
-			std::fwrite(ptr, 1, size_t(frameBytes), ffmpegPipe);
+	// 2) Map the PBO to get a CPU pointer
+	GLubyte* ptr = (GLubyte*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+	if (ptr) {
+		// 3) Write exactly one frame to ffmpeg
+		std::fwrite(ptr, 1, size_t(frameBytes), ffmpegPipe);
 
-			// If the image is upside-down, either flip rows here manually
-			// before fwrite (slower), or add "-vf vflip" to the ffmpeg args.
-			glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
-		}
-
-		// 4) Unbind
-		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-
-		glfwSwapBuffers(window);
-		frameIndex += mult;
-		if (frameIndex < 0)
-			frameIndex = 0;
-		else if (frameIndex > maxFrames)
-			frameIndex = maxFrames;
-		if (realTime > 100) {
-			break;
-		}
-		
+		// If the image is upside-down, either flip rows here manually
+		// before fwrite (slower), or add "-vf vflip" to the ffmpeg args.
+		glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
 	}
-	finish_ffmpeg_pipe(ffmpegPipe);
 
-	this->~RenderSystem();
+	// 4) Unbind
+	glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+	*/
+
+	glfwSwapBuffers(window);
+	frame++;
+}
+//finish_ffmpeg_pipe(ffmpegPipe);
+
+this->~RenderSystem();
+
+
+
+
+
+
+
 }
 
 
 
-RenderSystem::RenderSystem(GLFWwindow* window, GLint iWidth, GLint iHeight) : window(window), inputManager(POVCamera, SkyCamera) {
+RenderSystem::RenderSystem() {
 	static bool initialized = false;
 	if (initialized) throw std::runtime_error("RenderSystem already initialized");
 	initialized = true;
@@ -242,8 +273,6 @@ RenderSystem::RenderSystem(GLFWwindow* window, GLint iWidth, GLint iHeight) : wi
 	glfwSetWindowUserPointer(window, &inputManager);
 }
 
-RenderSystem::~RenderSystem()
-{
-	// add more
+RenderSystem::~RenderSystem() {
 	glfwDestroyWindow(window);
 }

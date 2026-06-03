@@ -83,7 +83,7 @@
       <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;$(CUDA_PATH)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalOptions>/utf-8 /MDd %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -108,7 +108,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalOptions>/utf-8 /MD %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -134,7 +134,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalOptions>/utf-8 /MD %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -150,59 +150,66 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\Luminary\Data\Spline3D.h" />
-    <ClInclude Include="src\Luminary\Data\InputDataInterpolator.h" />
     <ClInclude Include="src\Luminary\AxisPoint.h" />
     <ClInclude Include="src\Luminary\BlackholePoint.h" />
     <ClInclude Include="src\Luminary\Core\Camera.h" />
     <ClInclude Include="src\Luminary\Core\ComputeProgram.h" />
-    <ClInclude Include="src\Luminary\Data\CudaInterpolation.h" />
-    <ClInclude Include="src\Luminary\InputManager.h" />
-    <ClInclude Include="src\Luminary\Renderer\NbodyRenderer.h" />
     <ClInclude Include="src\Luminary\Core\PBO.h" />
     <ClInclude Include="src\Luminary\Core\PIMath.h" />
+    <ClInclude Include="src\Luminary\Core\RenderProgram.h" />
+    <ClInclude Include="src\Luminary\Core\SSBO.h" />
+    <ClInclude Include="src\Luminary\Core\Texture.h" />
+    <ClInclude Include="src\Luminary\Core\VAO.h" />
+    <ClInclude Include="src\Luminary\Core\VBO.h" />
+    <ClInclude Include="src\Luminary\Data\InputDataProcessor.h" />
+    <ClInclude Include="src\Luminary\Data\InputDataProcessorCuda.h" />
+    <ClInclude Include="src\Luminary\InputManager.h" />
+    <ClInclude Include="src\Luminary\RenderSystem.h" />
+    <ClInclude Include="src\Luminary\Renderer\GridRenderer.h" />
+    <ClInclude Include="src\Luminary\Renderer\NbodyRenderer.h" />
+    <ClInclude Include="src\Luminary\Renderer\SkyRenderer.h" />
+    <ClInclude Include="src\Luminary\Settings.h" />
+    <ClInclude Include="src\Luminary\Simulation.h" />
+    <ClInclude Include="src\Luminary\StarPoint.h" />
+    <ClInclude Include="src\Luminary\TrailPoint.h" />
     <ClInclude Include="src\Platform\OpenGL\imgui_impl_glfw.h" />
     <ClInclude Include="src\Platform\OpenGL\imgui_impl_opengl3.h" />
     <ClInclude Include="src\Platform\OpenGL\imgui_impl_opengl3_loader.h" />
-    <ClInclude Include="src\Luminary\Core\RenderProgram.h" />
-    <ClInclude Include="src\Luminary\RenderSystem.h" />
-    <ClInclude Include="src\Luminary\Core\SSBO.h" />
-    <ClInclude Include="src\Luminary\Simulation.h" />
-    <ClInclude Include="src\Luminary\Renderer\SkyRenderer.h" />
-    <ClInclude Include="src\Luminary\Data\Spline.h" />
-    <ClInclude Include="src\Luminary\StarPoint.h" />
-    <ClInclude Include="src\Luminary\Core\Texture.h" />
-    <ClInclude Include="src\Luminary\TrailPoint.h" />
-    <ClInclude Include="src\Luminary\Core\VAO.h" />
-    <ClInclude Include="src\Luminary\Core\VBO.h" />
     <ClInclude Include="vendor\stb_image\stb_image.h" />
     <ClInclude Include="vendor\stb_image\stb_image_write.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Luminary\Data\Spline3D.cpp" />
-    <ClCompile Include="src\Luminary\Data\InputDataInterpolator.cpp" />
     <ClCompile Include="src\Luminary\Core\Camera.cpp" />
     <ClCompile Include="src\Luminary\Core\ComputeProgram.cpp" />
-    <ClCompile Include="src\Luminary\InputManager.cpp" />
-    <ClCompile Include="src\Luminary\Main.cpp" />
-    <ClCompile Include="src\Luminary\Renderer\NbodyRenderer.cpp" />
     <ClCompile Include="src\Luminary\Core\PBO.cpp" />
-    <ClCompile Include="src\Platform\OpenGL\imgui_impl_glfw.cpp" />
-    <ClCompile Include="src\Platform\OpenGL\imgui_impl_opengl3.cpp" />
     <ClCompile Include="src\Luminary\Core\RenderProgram.cpp" />
-    <ClCompile Include="src\Luminary\RenderSystem.cpp" />
     <ClCompile Include="src\Luminary\Core\SSBO.cpp" />
-    <ClCompile Include="src\Luminary\Simulation.cpp" />
-    <ClCompile Include="src\Luminary\Renderer\SkyRenderer.cpp" />
     <ClCompile Include="src\Luminary\Core\Texture.cpp" />
     <ClCompile Include="src\Luminary\Core\VAO.cpp" />
     <ClCompile Include="src\Luminary\Core\VBO.cpp" />
+    <ClCompile Include="src\Luminary\Data\InputDataProcessor.cpp" />
+    <ClCompile Include="src\Luminary\InputManager.cpp" />
+    <ClCompile Include="src\Luminary\Main.cpp" />
+    <ClCompile Include="src\Luminary\RenderSystem.cpp" />
+    <ClCompile Include="src\Luminary\Renderer\GridRenderer.cpp" />
+    <ClCompile Include="src\Luminary\Renderer\NbodyRenderer.cpp" />
+    <ClCompile Include="src\Luminary\Renderer\SkyRenderer.cpp" />
+    <ClCompile Include="src\Luminary\Simulation.cpp" />
+    <ClCompile Include="src\Platform\OpenGL\imgui_impl_glfw.cpp" />
+    <ClCompile Include="src\Platform\OpenGL\imgui_impl_opengl3.cpp" />
     <ClCompile Include="vendor\stb_image\stb_image.cpp" />
     <ClCompile Include="vendor\stb_image\stb_image_write.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\Luminary\Data\CudaInterpolation.cu" />
     <None Include="vendor\glm\glm" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="src\Luminary\Data\InputDataProcessorCuda.cu">
+      <FileType>Document</FileType>
+      <Command>"$(CUDA_PATH)/bin/nvcc.exe" -c "%(FullPath)" -o "$(IntDir)%(Filename).obj" -I"$(ProjectDir)/src" -I"$(CUDA_PATH)/include" -I"../Luminary/vendor/glm" -I"../Luminary/vendor/Glad/include" -I"../Luminary/vendor/GLFW/include" --use-local-env -Xcompiler "/EHsc /MDd"</Command>
+      <Outputs>$(IntDir)%(Filename).obj</Outputs>
+      <Message>Compiling CUDA %(Identity)</Message>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="vendor\GLFW\GLFW.vcxproj">

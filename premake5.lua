@@ -41,6 +41,17 @@ project "Luminary"
 		"%{prj.name}/vendor/stb_image/**.cpp",
 	}
 
+filter { "files:**.cu" }
+	buildaction "CustomBuild"
+	buildmessage "Compiling CUDA %{file.relpath}"
+	buildcommands {
+		"\"$(CUDA_PATH)/bin/nvcc.exe\" -c \"%{file.abspath}\" -o \"$(IntDir)%(Filename).obj\" -I\"%{prj.location}/src\" -I\"$(CUDA_PATH)/include\" -I\"../Luminary/vendor/glm\" -I\"../Luminary/vendor/Glad/include\" -I\"../Luminary/vendor/GLFW/include\" --use-local-env -Xcompiler \"/EHsc /MDd\""
+	}
+	buildoutputs {
+		"$(IntDir)%(Filename).obj"
+	}
+
+filter {}
 
 	includedirs
 	{
@@ -70,7 +81,7 @@ project "Luminary"
 
 	filter "system:windows"
 		cppdialect "C++20" 
-		staticruntime "On"
+		staticruntime "Off"
 		systemversion "latest"
 
 		buildoptions { "/utf-8" }

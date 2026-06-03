@@ -71,11 +71,11 @@ RenderProgram::RenderProgram(const char* vertexFile, const char* geomFile, const
 
 
 
-void RenderProgram::Activate() {
+void RenderProgram::Activate() const {
 	glUseProgram(ID);
 }
 
-void RenderProgram::Delete() {
+void RenderProgram::Delete() const {
 	glDeleteProgram(ID);
 }
 

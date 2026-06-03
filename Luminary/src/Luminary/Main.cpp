@@ -1,117 +1,183 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "imgui.h"
-#include "Platform/OpenGL/imgui_impl_glfw.h"
-#include "Platform/OpenGL/imgui_impl_opengl3.h"
-
-
-#include <vector>
-
 #include "Simulation.h"
 #include "Luminary/RenderSystem.h"
-#include <iostream>
-#include <filesystem>
 
-const unsigned int width = 1920;
-const unsigned int height = 1080;
+#include <fstream>
 
-void printData(int tsIN,
-	const std::vector<double>& timesIN,
-	int obcIN,
-	const std::vector<std::vector<glm::vec3>>& positionsIN)
+void WriteBouncing3DLumenSim(const std::string& filepath)
 {
-	std::cout << "tsIN: " << tsIN << "\n";
+    const int objectCount = 1000;
+    const float durationSeconds = 60.0f;
+    const float dataFPS = 120.0f;
+    const int dataFrameCount = static_cast<int>(durationSeconds * dataFPS);
 
-	std::cout << "timesIN (" << timesIN.size() << "): ";
-	for (double t : timesIN)
-		std::cout << t << " ";
-	std::cout << "\n";
+    const float dt = 1.0f / dataFPS;
 
-	std::cout << "obcIN: " << obcIN << "\n";
+    const float boxHalfSize = 50.0f;
+    const float minSpeed = 2.0f;
+    const float maxSpeed = 12.0f;
 
-	std::cout << "positionsIN (" << positionsIN.size() << " outer vectors):\n";
-	for (size_t i = 0; i < positionsIN.size(); ++i) {
-		std::cout << "  [" << i << "] (" << positionsIN[i].size() << " vec3s): ";
-		for (const glm::vec3& v : positionsIN[i]) {
-			std::cout << "(" << v.x << ", " << v.y << ", " << v.z << ") ";
-		}
-		std::cout << "\n";
-	}
+    std::ofstream out(filepath, std::ios::binary);
+    if (!out) {
+        std::cerr << "Failed to open output file: " << filepath << std::endl;
+        return;
+    }
+
+    out.write(reinterpret_cast<const char*>(&objectCount), sizeof(int));
+    out.write(reinterpret_cast<const char*>(&dataFrameCount), sizeof(int));
+
+    std::vector<float> times(dataFrameCount);
+    for (int frame = 0; frame < dataFrameCount; frame++) {
+        times[frame] = static_cast<float>(frame) * dt;
+    }
+
+    out.write(
+        reinterpret_cast<const char*>(times.data()),
+        times.size() * sizeof(float)
+    );
+
+    std::vector<glm::vec3> positions(objectCount);
+    std::vector<glm::vec3> velocities(objectCount);
+    std::vector<glm::vec4> outputFrame(objectCount);
+
+    std::mt19937 rng(1337);
+
+    std::uniform_real_distribution<float> posDist(-boxHalfSize, boxHalfSize);
+    std::uniform_real_distribution<float> velDist(-1.0f, 1.0f);
+    std::uniform_real_distribution<float> speedDist(minSpeed, maxSpeed);
+
+    for (int i = 0; i < objectCount; i++) {
+        positions[i] = glm::vec3(
+            posDist(rng),
+            posDist(rng),
+            posDist(rng)
+        );
+
+        glm::vec3 dir(
+            velDist(rng),
+            velDist(rng),
+            velDist(rng)
+        );
+
+        float len = std::sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
+        if (len < 0.0001f) {
+            dir = glm::vec3(1.0f, 0.0f, 0.0f);
+        }
+        else {
+            dir /= len;
+        }
+
+        velocities[i] = dir * speedDist(rng);
+    }
+
+    for (int frame = 0; frame < dataFrameCount; frame++) {
+        if (frame % 60 == 0) {
+            std::cout << "Writing frame " << frame << " / " << dataFrameCount << std::endl;
+        }
+
+        for (int i = 0; i < objectCount; i++) {
+            outputFrame[i] = glm::vec4(
+                positions[i].x,
+                positions[i].y,
+                positions[i].z,
+                1.0f
+            );
+        }
+
+        out.write(
+            reinterpret_cast<const char*>(outputFrame.data()),
+            outputFrame.size() * sizeof(glm::vec4)
+        );
+
+        for (int i = 0; i < objectCount; i++) {
+            positions[i] += velocities[i] * dt;
+
+            if (positions[i].x < -boxHalfSize) {
+                positions[i].x = -boxHalfSize;
+                velocities[i].x *= -1.0f;
+            }
+            else if (positions[i].x > boxHalfSize) {
+                positions[i].x = boxHalfSize;
+                velocities[i].x *= -1.0f;
+            }
+
+            if (positions[i].y < -boxHalfSize) {
+                positions[i].y = -boxHalfSize;
+                velocities[i].y *= -1.0f;
+            }
+            else if (positions[i].y > boxHalfSize) {
+                positions[i].y = boxHalfSize;
+                velocities[i].y *= -1.0f;
+            }
+
+            if (positions[i].z < -boxHalfSize) {
+                positions[i].z = -boxHalfSize;
+                velocities[i].z *= -1.0f;
+            }
+            else if (positions[i].z > boxHalfSize) {
+                positions[i].z = boxHalfSize;
+                velocities[i].z *= -1.0f;
+            }
+        }
+    }
+
+    out.close();
+
+    const double bytes =
+        double(sizeof(int) * 2) +
+        double(sizeof(float)) * dataFrameCount +
+        double(sizeof(glm::vec4)) * objectCount * dataFrameCount;
+
+    std::cout
+        << "Wrote bouncing 3D lumen sim: " << filepath << "\n"
+        << "objectCount=" << objectCount << "\n"
+        << "frameCount=" << dataFrameCount << "\n"
+        << "durationSeconds=" << durationSeconds << "\n"
+        << "dataFPS=" << dataFPS << "\n"
+        << "approxFileSizeMB=" << bytes / (1024.0 * 1024.0)
+        << std::endl;
 }
 
-
 int main() {
+	glfwInit();
 
-
-
+    //WriteBouncing3DLumenSim("InputData.lumen");
 
 	/*
-	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
-	//glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // and swapinterval 0
-
-	GLFWwindow* window = glfwCreateWindow(width, height, "N-VISUALIZATION", NULL, NULL);
-	glfwMakeContextCurrent(window);
-	gladLoadGL();
-
-	// Init ImGui
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
-
-	ImGui::StyleColorsDark();
-
-	// Choose GLSL version that matches your OpenGL version
-	
-	const char* glsl_version = "#version 460";
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init(glsl_version);
-	
-
-	std::fstream fout;
-
 	Simulation sim;
+	std::vector<std::pair<std::vector<glm::vec4>, GLfloat>> outSim = sim.makeFullSim();
 
+	// rebuild the fout
+	std::fstream fout;
+	fout.open("InputData.lumen", std::ios::out | std::ios::binary);
+
+
+	int obcOut = outSim[0].first.size();
+	fout.write(reinterpret_cast<char*>(&obcOut), sizeof(int));
+
+	int tsOut = outSim.size();
+	fout.write(reinterpret_cast<char*> (&tsOut), sizeof(int));
+
+	std::vector<float> timesOut;
+	for (int i = 0; i < outSim.size(); i++) {
+		timesOut.push_back(outSim[i].second);
+	}
+	fout.write(reinterpret_cast<char*>(timesOut.data()), sizeof(float) * timesOut.size());
+
+	for (int i = 0; i < outSim.size(); i++) {
+		std::vector<glm::vec4> curout;
+		curout = outSim[i].first;
+		fout.write(reinterpret_cast<char*>(curout.data()), sizeof(glm::vec4) * curout.size());
+	}
+	fout.close();*/
 	
-	int tsIN;
-	std::vector<double> timesIN;
-	int obcIN;
+	RenderSystem renderSystem;
+	renderSystem.Run();
 
-	std::cout << "Working directory: "
-		<< std::filesystem::current_path()
-		<< std::endl;
+	glfwTerminate();
 
-	fout.open("InputData.nbody", std::ios::in | std::ios::binary);
-	if (!fout) std::cerr << "data error";
-	fout.read(reinterpret_cast<char*> (&tsIN), sizeof(int));
-	timesIN.resize(tsIN);
-	fout.read(reinterpret_cast<char*> (timesIN.data()), tsIN * sizeof(double));
-	fout.read(reinterpret_cast<char*> (&obcIN), sizeof(int));
-	std::vector<glm::vec3> a(tsIN * obcIN);
-	fout.read(reinterpret_cast<char*>(a.data()), a.size() * sizeof(glm::vec3));
-
-	std::vector<std::vector<glm::vec3>> positionsIN(tsIN, std::vector<glm::vec3>(obcIN));
-	for (int i = 0; i < tsIN; ++i)
-		std::copy(a.begin() + i * obcIN,
-			a.begin() + (i + 1) * obcIN,
-			positionsIN[i].begin());
-	fout.close();
-	//printData(tsIN, timesIN, obcIN, positionsIN);
-
-	RenderSystem renderSystem(window, width, height);
-
-	renderSystem.InputData(std::move(tsIN), std::move(timesIN), std::move(obcIN), std::move(positionsIN));
-
-
-	renderSystem.Begin();
-
-
-
-	glfwTerminate(); */
 	return 0;
 }
 

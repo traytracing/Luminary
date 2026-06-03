@@ -5,17 +5,17 @@
 #include <fstream>
 
 class RenderProgram {
-	public:
-		GLuint ID;
-		RenderProgram() = default;
-		RenderProgram(const char* vertexFile, const char* fragmentFile);
-		RenderProgram(const char* vertexFile, const char* geomFile, const char* fragmentFile);
+public:
+	GLuint ID;
+	RenderProgram() = default;
+	RenderProgram(const char* vertexFile, const char* fragmentFile);
+	RenderProgram(const char* vertexFile, const char* geomFile, const char* fragmentFile);
 
-		void Activate();
-		void Delete();
-	private:
-		std::string get_file_contents(const char* filename);
-		void checkShaderCompilation(GLuint shader, const std::string& type);
-		void checkShaderLinking(GLuint program);
+	void Activate() const;
+	void Delete() const;
+private:
+	std::string get_file_contents(const char* filename);
+	void checkShaderCompilation(GLuint shader, const std::string& type);
+	void checkShaderLinking(GLuint program);
 };
 #endif

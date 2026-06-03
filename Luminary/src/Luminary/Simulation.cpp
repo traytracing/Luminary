@@ -1,18 +1,18 @@
 #include "Simulation.h"
 #include <iostream>
 
-float Simulation::UpdateSim(std::vector<std::pair<std::vector<std::pair<glm::vec3, glm::vec3>>, GLfloat>>& sim, GLfloat deltaTime, GLfloat simTime) {
-	std::vector<std::pair<glm::vec3, glm::vec3>> allNew;
+float Simulation::UpdateSim(std::vector<std::pair<std::vector<std::pair<glm::vec4, glm::vec4>>, GLfloat>>& sim, GLfloat deltaTime, GLfloat simTime) {
+	std::vector<std::pair<glm::vec4, glm::vec4>> allNew;
 	float dtgeo = std::pow(10, 20);
 	for (int i = 0; i < sim.back().first.size(); ++i) {
-		glm::vec3 force = glm::vec3(0.0f);
+		glm::vec4 force = glm::vec4(0.0f);
 		
 
 		for (int j = 0; j < sim.back().first.size(); ++j) {
 			if (j == i) continue;
-			glm::vec3 cur = sim.back().first[i].first;
-			glm::vec3 comp = sim.back().first[j].first;
-			glm::vec3 diff = comp - cur;
+			glm::vec4 cur = sim.back().first[i].first;
+			glm::vec4 comp = sim.back().first[j].first;
+			glm::vec4 diff = comp - cur;
 			
 			float relDist = glm::length(diff);
 			force += GLfloat(k / pow(relDist, 2)) * glm::normalize(diff);
@@ -21,22 +21,22 @@ float Simulation::UpdateSim(std::vector<std::pair<std::vector<std::pair<glm::vec
 		}
 		//force +=  -1.0f * glm::normalize(sim.back().first[i].first); // centripital force 
 
-		glm::vec3 newVel = sim.back().first[i].second + force * deltaTime;
-		glm::vec3 newPos = sim.back().first[i].first + newVel * deltaTime;
+		glm::vec4 newVel = sim.back().first[i].second + force * deltaTime;
+		glm::vec4 newPos = sim.back().first[i].first + newVel * deltaTime;
 		allNew.push_back(std::pair(newPos, newVel));
 	}
 
 	sim.push_back(std::pair(allNew, simTime));
-	return dtgeo * 0.6f; // 0.25 good
+	return dtgeo * 0.9f; // 0.25 good
 }
 
 
 #include <random>
-extern int totalSimTime;
+int totalSimTime = 120;
 int randomNum = -1231495304;
 extern int objectCount;
-std::vector<std::pair<std::vector<glm::vec3>, GLfloat>> Simulation::makeFullSim() {
-	std::vector<std::pair<std::vector<std::pair<glm::vec3, glm::vec3>>, GLfloat>> sim;
+std::vector<std::pair<std::vector<glm::vec4>, GLfloat>> Simulation::makeFullSim() {
+	std::vector<std::pair<std::vector<std::pair<glm::vec4, glm::vec4>>, GLfloat>> sim;
 
 	std::random_device rd;
 	int randomNum = rd();
@@ -57,17 +57,17 @@ std::vector<std::pair<std::vector<glm::vec3>, GLfloat>> Simulation::makeFullSim(
 	std::uniform_real_distribution<float> disTime(0.0001f, 0.05f);
 
 	//create objects initial position + vel
-	std::vector<std::pair<glm::vec3, glm::vec3>> initialObjects;
+	std::vector<std::pair<glm::vec4, glm::vec4>> initialObjects;
 	for (int i = 0; i < objectCount; i++) {
 		float angle = angleDist(gen);
 		float radius = radiusDist(gen);
-		glm::vec3 pos = glm::vec3(std::cos(angle), std::sin(angle), 0.0f) * radius;
+		glm::vec4 pos = glm::vec4(std::cos(angle), std::sin(angle), 0.0f, 0.0f) * radius;
 
 		float speed = speedDist(gen);
-		glm::vec3 vel = glm::vec3(std::sin(angle), -std::cos(angle), 0.0f) * speed;
+		glm::vec4 vel = glm::vec4(std::sin(angle), -std::cos(angle), 0.0f, 0.0f) * speed;
 
-		pos = glm::vec3(disPos(gen), disPos(gen), disPos(gen));
-		vel = glm::vec3(disVel(gen), disVel(gen), disVel(gen));
+		pos = glm::vec4(disPos(gen), disPos(gen), disPos(gen), 0);
+		vel = glm::vec4(disVel(gen), disVel(gen), disVel(gen), 0);
 		initialObjects.push_back(std::pair(pos, vel));
 	}
 	sim.push_back(std::pair(initialObjects, 0.0f));
@@ -86,9 +86,9 @@ std::vector<std::pair<std::vector<glm::vec3>, GLfloat>> Simulation::makeFullSim(
 
 
 	//convert format
-	std::vector<std::pair<std::vector<glm::vec3>, GLfloat>> out;
+	std::vector<std::pair<std::vector<glm::vec4>, GLfloat>> out;
 	for (int i = 0; i < sim.size(); i++) {
-		std::vector<glm::vec3> curObjs;
+		std::vector<glm::vec4> curObjs;
 		for (int j = 0; j < sim[i].first.size(); ++j) {
 			curObjs.push_back(sim[i].first[j].first);
 		}
@@ -97,9 +97,9 @@ std::vector<std::pair<std::vector<glm::vec3>, GLfloat>> Simulation::makeFullSim(
 	}
 
 	// not safe
-	for (int i = 3999; i < 8000; i++) {
-		out[i].first[17] = glm::vec3(std::nan(""));
-	}
+	//for (int i = 3999; i < 8000; i++) {
+		//out[i].first[17] = glm::vec4(std::nan(""));
+	//}
 	
 	return out;
 }

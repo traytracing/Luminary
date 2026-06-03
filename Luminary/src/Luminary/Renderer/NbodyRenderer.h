@@ -11,9 +11,10 @@
 #include "Luminary/TrailPoint.h"
 #include "Luminary/BlackholePoint.h"
 
+#include "Luminary/Core/SSBO.h"
 
 
-#include "Luminary/Data/Spline3D.h"
+
 
 
 
@@ -25,12 +26,10 @@ public:
 	NbodyRenderer& operator=(const NbodyRenderer&) = delete;
 	NbodyRenderer(NbodyRenderer&&) = delete;
 	NbodyRenderer& operator=(NbodyRenderer&&) = delete;
-
 public:
-	NbodyRenderer(Camera& POVCamera);
+	NbodyRenderer(Camera& POVCamera, SSBO& positionSSBO);
 	~NbodyRenderer();
 
-	
 	void Render();
 
 private: // change Render Program shader names later
@@ -39,6 +38,7 @@ private: // change Render Program shader names later
 
 	VAO blackholeVAO;
 	VBO blackholeVBO{ GL_DYNAMIC_DRAW };
+	SSBO& positionSSBO;
 
 	VAO trailVAO;
 	VBO trailVBO{ GL_DYNAMIC_DRAW };
@@ -53,11 +53,6 @@ private: // change Render Program shader names later
 	
 	
 
-
-	std::vector<Spline3D> SplinePathsForObjects;
-
 	void SetUniforms();
 };
-
-
 #endif

@@ -1,6 +1,5 @@
 #include "NbodyRenderer.h"
 #include <iostream>
-#include "Luminary/Data/Spline.h"
 #include <algorithm>
 #include <random>
 #include "Luminary/Core/PIMath.h"
@@ -18,20 +17,20 @@ std::vector<GLfloat> masses;
 GLfloat trailWidth = 5.0f;
 GLfloat axisWidth = 2.3f;
 
-int objectCount = 30;
+int objectCount = 10;
 
 // change hte whole thing later
-NbodyRenderer::NbodyRenderer(Camera& POVCamera) : POVCamera(POVCamera) {
+NbodyRenderer::NbodyRenderer(Camera& POVCamera, SSBO& positionSSBO) : POVCamera(POVCamera), positionSSBO(positionSSBO) {
 	static bool initialized = false;
 	if (initialized) throw std::runtime_error("NbodyRenderer already initialized");
 	initialized = true;
 
 	
-	blackholeVAO.LinkAttrib(blackholeVBO, 0, 3, GL_FLOAT, sizeof(BlackholePoint), (void*)0);
-	blackholeVAO.LinkAttrib(blackholeVBO, 1, 2, GL_FLOAT, sizeof(BlackholePoint), (void*)offsetof(BlackholePoint, bNormal));
-	blackholeVAO.LinkAttrib(blackholeVBO, 2, 1, GL_FLOAT, sizeof(BlackholePoint), (void*)offsetof(BlackholePoint, mass));
-	blackholeVAO.LinkAttrib(blackholeVBO, 3, 2, GL_FLOAT, sizeof(BlackholePoint), (void*)offsetof(BlackholePoint, size));
-	blackholeVAO.LinkAttrib(blackholeVBO, 4, 1, GL_FLOAT, sizeof(BlackholePoint), (void*)offsetof(BlackholePoint, seed));
+	//blackholeVAO.LinkAttrib(blackholeVBO, 0, 4, GL_FLOAT, sizeof(BlackholePoint), (void*)0);
+	blackholeVAO.LinkAttrib(blackholeVBO, 0, 2, GL_FLOAT, sizeof(BlackholePoint), (void*)0);
+	blackholeVAO.LinkAttrib(blackholeVBO, 1, 1, GL_FLOAT, sizeof(BlackholePoint), (void*)offsetof(BlackholePoint, mass));
+	blackholeVAO.LinkAttrib(blackholeVBO, 2, 2, GL_FLOAT, sizeof(BlackholePoint), (void*)offsetof(BlackholePoint, size));
+	blackholeVAO.LinkAttrib(blackholeVBO, 3, 1, GL_FLOAT, sizeof(BlackholePoint), (void*)offsetof(BlackholePoint, seed));
 
 	trailVAO.LinkAttrib(trailVBO, 0, 3, GL_FLOAT, sizeof(TrailPoint), (void*)0);
 	trailVAO.LinkAttrib(trailVBO, 1, 1, GL_FLOAT, sizeof(TrailPoint), (void*)(3 * sizeof(GLfloat)));
@@ -55,7 +54,7 @@ NbodyRenderer::NbodyRenderer(Camera& POVCamera) : POVCamera(POVCamera) {
 }
 extern int fps;
 extern int totalSimTime;
-extern std::vector<std::pair<std::vector<glm::vec3>, GLfloat>> i_objectsPositionsAcrossTime;
+ std::vector<std::pair<std::vector<glm::vec3>, GLfloat>> i_objectsPositionsAcrossTime;
 
 /*
 std::vector<NbodyRenderer::InterpolatedGoodData> data;
@@ -117,14 +116,15 @@ void NbodyRenderer::SetUniforms() {
 GLfloat trailTime = 2.0f;
 glm::vec4 trailColor = glm::vec4(0.043f, 0.031f, 0.118f, 1.0f);
 
+
 // take in time
 void NbodyRenderer::Render() {
 	if (frameIndex < 0 || frameIndex > 16499) { POVCamera.object = glm::vec3(1);
 	return; }
 
-	POVCamera.object = i_objectsPositionsAcrossTime[frameIndex].first[curView];
-	if (std::isnan(POVCamera.object.x)) 
-		POVCamera.object = glm::vec3(1);
+	//POVCamera.object = i_objectsPositionsAcrossTime[frameIndex].first[curView];
+	//if (std::isnan(POVCamera.object.x)) 
+	//	POVCamera.object = glm::vec3(1);
 	//FIX LATER THIS IS WHY ITS BAD
 
 	SetUniforms();
@@ -133,8 +133,7 @@ void NbodyRenderer::Render() {
 	for (int i = 0; i < objectCount; i++) {
 		BlackholePoint curObject;
 
-		curObject.position = i_objectsPositionsAcrossTime[frameIndex].first[i];
-		if (std::isnan(curObject.position.x)) continue;
+		//if (std::isnan(curObject.position.x)) continue;
 		curObject.bNormal = bNormals[i];
 		curObject.size = glm::vec2(0.2f); //0.035f
 		curObject.mass = masses[i];
@@ -143,9 +142,10 @@ void NbodyRenderer::Render() {
 		objects.push_back(curObject);
 	}
 	
-	
 	blackholeVBO.SetData(objects.data(), objects.size() * sizeof(BlackholePoint));
 
+	
+	blackholeRenderProgram.Activate();
 
 	
 	glEnable(GL_DEPTH_TEST); glDepthMask(GL_TRUE);
@@ -153,10 +153,11 @@ void NbodyRenderer::Render() {
 
 
 	blackholeRenderProgram.Activate();
+	positionSSBO.BindBase(0);
 	blackholeVAO.Bind();
 	glDrawArrays(GL_POINTS, 0, objects.size());
 
-	
+	/*
 	for (int i = 0; i < objectCount; i++) {
 		for (int j = frameIndex; j >= 0 && i_objectsPositionsAcrossTime[frameIndex].second - i_objectsPositionsAcrossTime[j].second <= trailTime; j-=5) {
 			TrailPoint cur;
@@ -217,4 +218,5 @@ void NbodyRenderer::Render() {
 	a.Activate();
 	VAO230203.Bind();
 	glDrawArrays(GL_POINTS, 0, axisPoints.size());
+	*/
 }

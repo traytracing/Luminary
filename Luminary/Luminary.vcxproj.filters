@@ -4,6 +4,18 @@
     <Filter Include="src">
       <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Luminary">
+      <UniqueIdentifier>{ED9A0204-D9FD-91A8-8283-CA5E6EC55D2B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Luminary\Core">
+      <UniqueIdentifier>{659B023C-D1B1-00D2-1A29-8CF3867ED159}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Luminary\Data">
+      <UniqueIdentifier>{76EC023C-E202-01D2-2B7A-8CF397CFD159}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Luminary\Renderer">
+      <UniqueIdentifier>{3379E335-9FE5-9E30-68D9-368ED404C198}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Platform">
       <UniqueIdentifier>{21CA02E5-0D2D-9289-B6B2-CA3FA2F45D0C}</UniqueIdentifier>
     </Filter>
@@ -22,28 +34,67 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Luminary\AxisPoint.h">
-      <Filter>src</Filter>
+      <Filter>src\Luminary</Filter>
     </ClInclude>
     <ClInclude Include="src\Luminary\BlackholePoint.h">
-      <Filter>src</Filter>
+      <Filter>src\Luminary</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Luminary\Core\Camera.h">
+      <Filter>src\Luminary\Core</Filter>
     </ClInclude>
     <ClInclude Include="src\Luminary\Core\ComputeProgram.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Luminary\Data\CudaInterpolation.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Luminary\InputManager.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Luminary\Renderer\NbodyRenderer.h">
-      <Filter>src</Filter>
+      <Filter>src\Luminary\Core</Filter>
     </ClInclude>
     <ClInclude Include="src\Luminary\Core\PBO.h">
-      <Filter>src</Filter>
+      <Filter>src\Luminary\Core</Filter>
     </ClInclude>
     <ClInclude Include="src\Luminary\Core\PIMath.h">
-      <Filter>src</Filter>
+      <Filter>src\Luminary\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Luminary\Core\RenderProgram.h">
+      <Filter>src\Luminary\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Luminary\Core\SSBO.h">
+      <Filter>src\Luminary\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Luminary\Core\Texture.h">
+      <Filter>src\Luminary\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Luminary\Core\VAO.h">
+      <Filter>src\Luminary\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Luminary\Core\VBO.h">
+      <Filter>src\Luminary\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Luminary\Data\InputDataProcessor.h">
+      <Filter>src\Luminary\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Luminary\InputManager.h">
+      <Filter>src\Luminary</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Luminary\RenderSystem.h">
+      <Filter>src\Luminary</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Luminary\Renderer\GridRenderer.h">
+      <Filter>src\Luminary\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Luminary\Renderer\NbodyRenderer.h">
+      <Filter>src\Luminary\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Luminary\Renderer\SkyRenderer.h">
+      <Filter>src\Luminary\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Luminary\Settings.h">
+      <Filter>src\Luminary</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Luminary\Simulation.h">
+      <Filter>src\Luminary</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Luminary\StarPoint.h">
+      <Filter>src\Luminary</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Luminary\TrailPoint.h">
+      <Filter>src\Luminary</Filter>
     </ClInclude>
     <ClInclude Include="src\Platform\OpenGL\imgui_impl_glfw.h">
       <Filter>src\Platform\OpenGL</Filter>
@@ -54,67 +105,62 @@
     <ClInclude Include="src\Platform\OpenGL\imgui_impl_opengl3_loader.h">
       <Filter>src\Platform\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="src\Luminary\Core\RenderProgram.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Luminary\RenderSystem.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Luminary\Core\SSBO.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Luminary\Simulation.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Luminary\Renderer\SkyRenderer.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Luminary\Data\Spline.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Luminary\StarPoint.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Luminary\Core\Texture.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Luminary\TrailPoint.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Luminary\Core\VAO.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Luminary\Core\VBO.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
     <ClInclude Include="vendor\stb_image\stb_image_write.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="src\Luminary\Core\Camera.h" />
-    <ClInclude Include="src\Luminary\Data\InputDataInterpolator.h" />
-    <ClInclude Include="src\Luminary\Data\Spline3D.h" />
+    <ClInclude Include="src\Luminary\Data\InputDataProcessorCuda.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Luminary\Core\Camera.cpp">
-      <Filter>src</Filter>
+      <Filter>src\Luminary\Core</Filter>
     </ClCompile>
     <ClCompile Include="src\Luminary\Core\ComputeProgram.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Luminary\InputManager.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Luminary\Main.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Luminary\Renderer\NbodyRenderer.cpp">
-      <Filter>src</Filter>
+      <Filter>src\Luminary\Core</Filter>
     </ClCompile>
     <ClCompile Include="src\Luminary\Core\PBO.cpp">
-      <Filter>src</Filter>
+      <Filter>src\Luminary\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Luminary\Core\RenderProgram.cpp">
+      <Filter>src\Luminary\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Luminary\Core\SSBO.cpp">
+      <Filter>src\Luminary\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Luminary\Core\Texture.cpp">
+      <Filter>src\Luminary\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Luminary\Core\VAO.cpp">
+      <Filter>src\Luminary\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Luminary\Core\VBO.cpp">
+      <Filter>src\Luminary\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Luminary\Data\InputDataProcessor.cpp">
+      <Filter>src\Luminary\Data</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Luminary\InputManager.cpp">
+      <Filter>src\Luminary</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Luminary\Main.cpp">
+      <Filter>src\Luminary</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Luminary\RenderSystem.cpp">
+      <Filter>src\Luminary</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Luminary\Renderer\GridRenderer.cpp">
+      <Filter>src\Luminary\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Luminary\Renderer\NbodyRenderer.cpp">
+      <Filter>src\Luminary\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Luminary\Renderer\SkyRenderer.cpp">
+      <Filter>src\Luminary\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Luminary\Simulation.cpp">
+      <Filter>src\Luminary</Filter>
     </ClCompile>
     <ClCompile Include="src\Platform\OpenGL\imgui_impl_glfw.cpp">
       <Filter>src\Platform\OpenGL</Filter>
@@ -122,45 +168,21 @@
     <ClCompile Include="src\Platform\OpenGL\imgui_impl_opengl3.cpp">
       <Filter>src\Platform\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="src\Luminary\Core\RenderProgram.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Luminary\RenderSystem.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Luminary\Core\SSBO.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Luminary\Simulation.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Luminary\Renderer\SkyRenderer.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Luminary\Core\Texture.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Luminary\Core\VAO.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Luminary\Core\VBO.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
     <ClCompile Include="vendor\stb_image\stb_image_write.cpp">
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="src\Luminary\Data\InputDataInterpolator.cpp" />
-    <ClCompile Include="src\Luminary\Data\Spline3D.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\Luminary\Data\CudaInterpolation.cu">
-      <Filter>src</Filter>
-    </None>
     <None Include="vendor\glm\glm">
       <Filter>vendor\glm</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="src\Luminary\Data\InputDataProcessorCuda.cu">
+      <Filter>src\Luminary\Data</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

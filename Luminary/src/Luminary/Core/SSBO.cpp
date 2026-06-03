@@ -8,16 +8,20 @@ SSBO::SSBO() {
 
 
 
-void SSBO::SetData(void* data, GLsizeiptr size) {
+bool SSBO::SetData(void* data, GLsizeiptr size) {
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ID);
 
-	if (size != CurrentSize) {
-		glBufferData(GL_SHADER_STORAGE_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
-		CurrentSize = size;
+	bool resized = false;
+
+	if (size > Capacity) {
+		Capacity = 2 * size;
+		glBufferData(GL_SHADER_STORAGE_BUFFER, Capacity, nullptr, GL_DYNAMIC_DRAW);
+		resized = true;
 	}
 
-	if (data == nullptr) {
-		return;
+	if (data == nullptr || size == 0) {
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+		return resized;
 	}
 
 
@@ -25,13 +29,14 @@ void SSBO::SetData(void* data, GLsizeiptr size) {
 
 	if (!ptr) {
 		std::cerr << "Failed to map SSBO!" << std::endl;
-		return;
+		return resized;
 	}
 
 	memcpy(ptr, data, size);
 	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	return resized;
 }
 
 void SSBO::Bind() {
@@ -48,4 +53,20 @@ void SSBO::Unbind() {
 
 void SSBO::Delete() {
 	glDeleteBuffers(1, &ID);
+}
+
+bool SSBO::Resize(GLsizeiptr size)
+{
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ID);
+
+	bool resized = false;
+
+	if (size > Capacity) {
+		Capacity = 2 * size;
+		glBufferData(GL_SHADER_STORAGE_BUFFER, Capacity, nullptr, GL_DYNAMIC_DRAW);
+		resized = true;
+	}
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	return resized;
 }

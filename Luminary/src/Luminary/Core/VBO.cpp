@@ -24,17 +24,20 @@ void VBO::SetDataOnce(void* data, GLsizeiptr size) {
 	DataSetAlready = true;
 }
 
-void VBO::SetData(void* data, GLsizeiptr size) {
+bool VBO::SetData(void* data, GLsizeiptr size) {
 	if (Usage != GL_DYNAMIC_DRAW) {
 		std::cout << "WRONG VBO TYPE: " << Usage << std::endl;
-		return;
+		return false;
 	}
 
 	glBindBuffer(GL_ARRAY_BUFFER, ID);
 	
-	if (size != CurrentSize) {
+	bool resized{ false };
+
+	if (size != Capacity) {
 		glBufferData(GL_ARRAY_BUFFER, size, nullptr, Usage);
-		CurrentSize = size;
+		Capacity = size;
+		resized = true;
 	}
 	
 	
@@ -43,13 +46,14 @@ void VBO::SetData(void* data, GLsizeiptr size) {
 
 	if (!ptr) {
 		std::cerr << "Failed to map VBO!" << std::endl;
-		return;
+		return false;
 		
 	}
 
 	memcpy(ptr, data, size);
 	glUnmapBuffer(GL_ARRAY_BUFFER);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	return resized;
 }
 
 void VBO::Bind() {

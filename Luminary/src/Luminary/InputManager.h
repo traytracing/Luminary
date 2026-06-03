@@ -26,12 +26,6 @@ private:
     Camera& POVCamera; 
     Camera& SkyCamera;
 
-    GLfloat zoom = 1.0f; // dont need
-    GLdouble lastMouseX = 0.0, lastMouseY = 0.0;  // dont need
-    GLdouble panOffsetX = 0.0, panOffsetY = 0.0; // dont need
-
-    GLboolean isPanning;  // dont need
-
     void UpdateCameras(GLFWwindow* window);
 };
 #endif

@@ -7,6 +7,8 @@
 #include "Renderer/NbodyRenderer.h"
 
 #include "Core/Camera.h"
+#include "Data/InputDataProcessor.h"
+#include "Settings.h"
 
 class RenderSystem {
 public:
@@ -14,25 +16,23 @@ public:
 	RenderSystem& operator=(const RenderSystem&) = delete;
 	RenderSystem(RenderSystem&&) = delete;
 	RenderSystem& operator=(RenderSystem&&) = delete;
-
 public:
 	~RenderSystem();
-	RenderSystem(GLFWwindow* window, GLint iWidth, GLint iHeight); // change iwndow later
+	RenderSystem();
 
-	void InputData(int timestampsCount, std::vector<double> timestamps, int objectCount, std::vector<std::vector<glm::vec3>> positions);
-	void Begin();
-
-
-
-
+	void Run();
 private:
-	GLFWwindow* window;
-	InputManager inputManager;
+	Settings settings{};
+	GLFWwindow* MakeWindow();
+	GLFWwindow* window = MakeWindow();
 
 	Camera POVCamera;
 	Camera SkyCamera;
 
-	NbodyRenderer nbodyRenderer {POVCamera};
+	InputManager inputManager{POVCamera, SkyCamera};
+	InputDataProcessor inputDataProcessor;
+
+	NbodyRenderer nbodyRenderer {POVCamera, inputDataProcessor.GetSSBORef()};
 	SkyRenderer skyRenderer {1000, SkyCamera};
 	RenderProgram gridRenderProgram{ "grid.vert", "grid.frag" };
 	VAO vaoooo;
