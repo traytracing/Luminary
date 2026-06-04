@@ -1,5 +1,4 @@
-#ifndef TRAIL_POINT_STRUCT_H
-#define TRAIL_POINT_STRUCT_H
+#pragma once
 
 #include <glm/glm.hpp>
 #include <glad/glad.h>
@@ -9,5 +8,3 @@ struct TrailPoint {
 	GLfloat renderbool;
 	glm::vec4 color;
 };
-
-#endif

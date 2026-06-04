@@ -39,6 +39,9 @@
     <ClInclude Include="src\Luminary\BlackholePoint.h">
       <Filter>src\Luminary</Filter>
     </ClInclude>
+    <ClInclude Include="src\Luminary\Core\AssetPath.h">
+      <Filter>src\Luminary\Core</Filter>
+    </ClInclude>
     <ClInclude Include="src\Luminary\Core\Camera.h">
       <Filter>src\Luminary\Core</Filter>
     </ClInclude>
@@ -67,6 +70,9 @@
       <Filter>src\Luminary\Core</Filter>
     </ClInclude>
     <ClInclude Include="src\Luminary\Data\InputDataProcessor.h">
+      <Filter>src\Luminary\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Luminary\Data\InputDataProcessorCuda.h">
       <Filter>src\Luminary\Data</Filter>
     </ClInclude>
     <ClInclude Include="src\Luminary\InputManager.h">
@@ -111,7 +117,6 @@
     <ClInclude Include="vendor\stb_image\stb_image_write.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="src\Luminary\Data\InputDataProcessorCuda.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Luminary\Core\Camera.cpp">

@@ -6,8 +6,7 @@ SkyRenderer::~SkyRenderer() {
 }
 
 SkyRenderer::SkyRenderer(unsigned int starCount, Camera& camera)
-	: largeStarsTex("stars-special.png", 0), smallStarsTex("smallstars.png", 1), starCount(starCount),
-	camera(camera) {
+	: starCount(starCount), camera(camera) {
 	static bool initialized = false;
 	if (initialized) throw std::runtime_error("SkyRender already initialized");
 	initialized = true;

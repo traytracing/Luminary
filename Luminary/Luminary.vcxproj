@@ -96,6 +96,9 @@
     </Link>
     <ProjectReference>
     </ProjectReference>
+    <PostBuildEvent>
+      <Command>xcopy /Q /E /Y /I "$(ProjectDir)\assets" "..\bin\Debug-windows-x86_64\Luminary\assets"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -122,6 +125,9 @@
     </Link>
     <ProjectReference>
     </ProjectReference>
+    <PostBuildEvent>
+      <Command>xcopy /Q /E /Y /I "$(ProjectDir)\assets" "..\bin\Release-windows-x86_64\Luminary\assets"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
     <ClCompile>
@@ -148,10 +154,14 @@
     </Link>
     <ProjectReference>
     </ProjectReference>
+    <PostBuildEvent>
+      <Command>xcopy /Q /E /Y /I "$(ProjectDir)\assets" "..\bin\Dist-windows-x86_64\Luminary\assets"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\Luminary\AxisPoint.h" />
     <ClInclude Include="src\Luminary\BlackholePoint.h" />
+    <ClInclude Include="src\Luminary\Core\AssetPath.h" />
     <ClInclude Include="src\Luminary\Core\Camera.h" />
     <ClInclude Include="src\Luminary\Core\ComputeProgram.h" />
     <ClInclude Include="src\Luminary\Core\PBO.h" />
@@ -206,7 +216,9 @@
   <ItemGroup>
     <CustomBuild Include="src\Luminary\Data\InputDataProcessorCuda.cu">
       <FileType>Document</FileType>
-      <Command>"$(CUDA_PATH)/bin/nvcc.exe" -c "%(FullPath)" -o "$(IntDir)%(Filename).obj" -I"$(ProjectDir)/src" -I"$(CUDA_PATH)/include" -I"../Luminary/vendor/glm" -I"../Luminary/vendor/Glad/include" -I"../Luminary/vendor/GLFW/include" --use-local-env -Xcompiler "/EHsc /MDd"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(CUDA_PATH)/bin/nvcc.exe" -c "%(FullPath)" -o "$(IntDir)%(Filename).obj" -I"$(ProjectDir)/src" -I"$(CUDA_PATH)/include" --use-local-env --std=c++20 -Xcompiler "/EHsc /MDd /utf-8"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(CUDA_PATH)/bin/nvcc.exe" -c "%(FullPath)" -o "$(IntDir)%(Filename).obj" -I"$(ProjectDir)/src" -I"$(CUDA_PATH)/include" --use-local-env --std=c++20 -Xcompiler "/EHsc /MD /utf-8"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">"$(CUDA_PATH)/bin/nvcc.exe" -c "%(FullPath)" -o "$(IntDir)%(Filename).obj" -I"$(ProjectDir)/src" -I"$(CUDA_PATH)/include" --use-local-env --std=c++20 -Xcompiler "/EHsc /MD /utf-8"</Command>
       <Outputs>$(IntDir)%(Filename).obj</Outputs>
       <Message>Compiling CUDA %(Identity)</Message>
     </CustomBuild>

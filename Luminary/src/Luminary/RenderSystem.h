@@ -1,14 +1,12 @@
-#ifndef RENDER_SYSTEM_CLASS
-#define RENDER_SYSTEM_CLASS
-
+#pragma once
 
 #include "InputManager.h"
-#include "Renderer/SkyRenderer.h"
-#include "Renderer/NbodyRenderer.h"
-
+#include "Settings.h"
 #include "Core/Camera.h"
 #include "Data/InputDataProcessor.h"
-#include "Settings.h"
+#include "Renderer/SkyRenderer.h"
+#include "Renderer/NbodyRenderer.h"
+#include "Renderer/GridRenderer.h"
 
 class RenderSystem {
 public:
@@ -30,14 +28,10 @@ private:
 	Camera SkyCamera;
 
 	InputManager inputManager{POVCamera, SkyCamera};
-	InputDataProcessor inputDataProcessor;
+	InputDataProcessor inputDataProcessor{ settings };
 
-	NbodyRenderer nbodyRenderer {POVCamera, inputDataProcessor.GetSSBORef()};
-	SkyRenderer skyRenderer {1000, SkyCamera};
-	RenderProgram gridRenderProgram{ "grid.vert", "grid.frag" };
-	VAO vaoooo;
-
+	NbodyRenderer nbodyRenderer{ POVCamera, inputDataProcessor.GetSSBORef() };
+	SkyRenderer skyRenderer{ 1000, SkyCamera };
+	GridRenderer gridRenderer{ POVCamera };
 	void Render();
 };
-
-#endif

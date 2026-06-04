@@ -1,17 +1,16 @@
 #pragma once
 
 #include <glad/glad.h>
+#include <glm/glm.hpp>
+
 #include <vector>
 #include <string>
-#include <glm/glm.hpp>
-#include "Luminary/Core/SSBO.h"
-
-#include "Luminary/Settings.h"
 #include <fstream>
 
+#include "Luminary/Core/RenderProgram.h"
+#include "Luminary/Core/SSBO.h"
+#include "Luminary/Settings.h"
 #include "InputDataProcessorCuda.h"
-#include <Luminary/Core/RenderProgram.h>
-
 
 enum class ProcessorState {
 	NoFileLoaded,
@@ -19,12 +18,8 @@ enum class ProcessorState {
 	FileLoaded
 };
 
-
-
-
-// make an iterator later
 struct LumenFile { // object count and frame count (and their vectors) are gauranteed to be atleast 1
-	int MaxDataChunkByteSize = 20000;
+	int MaxDataChunkByteSize = 9000000;
 
 	std::string filepath;
 	int objectCount{ -1 };
@@ -100,11 +95,9 @@ struct LumenFile { // object count and frame count (and their vectors) are gaura
 	}
 };
 
-
-
 class InputDataProcessor {
 public:
-	InputDataProcessor();
+	InputDataProcessor(const Settings& SRF);
 	~InputDataProcessor();
 
 	void SetChunkConfig(int newMaxDataChunkByteSize);
@@ -128,4 +121,5 @@ private:
 	SSBO positionSSBO;
 	cudaGraphicsResource* cudaSSBO{ nullptr };
 	std::vector<RenderProgram*> programs;
+	const Settings& SRF;
 };

@@ -1,5 +1,4 @@
-#ifndef CAMERA_CLASS_H
-#define CAMERA_CLASS_H
+#pragma once
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -27,7 +26,6 @@ public:
 	GLfloat sensitivity = 100.0f;
 	GLboolean firstClick = true;
 	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-	//
 
 	glm::vec3 position = glm::vec3(0.0f);
 	glm::vec3 orientation = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -47,10 +45,4 @@ public:
 	void UploadInverseMatrix(RenderProgram& renderProgram, const char* uniform);
 
 	void Inputs(GLFWwindow* window); // fix later with input manager
-
-private:
-	
-
 };
-
-#endif

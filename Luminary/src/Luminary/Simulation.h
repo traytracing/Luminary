@@ -1,16 +1,25 @@
-#ifndef SIMULATION_CLASS_H
-#define SIMULATION_CLASS_H
+#pragma once
 
-#include <vector>
 #include <glm/glm.hpp>
 #include <glad/glad.h>
 
+#include <string>
+#include <vector>
+
 class Simulation {
-	const GLfloat k = 10.0f;
-	float UpdateSim(std::vector<std::pair<std::vector<std::pair<glm::vec4, glm::vec4>>, GLfloat>>& sim, GLfloat deltaTime, GLfloat simTime);
-
 public:
-	std::vector<std::pair<std::vector<glm::vec4>, GLfloat>> makeFullSim();
-};
+	enum class SimType {
+		Original,
+		Spiral
+	};
+public:
+	Simulation() = default;
+	~Simulation() = default;
 
-#endif
+	void MakeSim(const std::string& filename, const SimType& type);
+private:
+	bool WriteSimToFile(const std::string& filename, const std::vector<std::pair<std::vector<glm::vec4>, GLfloat>>& OutSim);
+
+	std::vector<std::pair<std::vector<glm::vec4>, GLfloat>> MakeOriginalSim();
+	std::vector<std::pair<std::vector<glm::vec4>, GLfloat>> MakeSpiralSim();
+};

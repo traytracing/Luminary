@@ -12,9 +12,7 @@
 #include "Luminary/BlackholePoint.h"
 
 #include "Luminary/Core/SSBO.h"
-
-
-
+#include <Luminary/Core/AssetPath.h>
 
 
 
@@ -31,10 +29,9 @@ public:
 	~NbodyRenderer();
 
 	void Render();
-
 private: // change Render Program shader names later
-	RenderProgram blackholeRenderProgram{ "default.vert", "default.geom", "Planet.frag" };
-	RenderProgram trailRenderProgram{ "line.vert", "line.frag" };
+	RenderProgram blackholeRenderProgram{ GetAssetPath("shaders/default.vert").c_str(), GetAssetPath("shaders/default.geom").c_str(), GetAssetPath("shaders/Planet.frag").c_str() };
+	RenderProgram trailRenderProgram{ GetAssetPath("shaders/line.vert").c_str(), GetAssetPath("shaders/line.frag").c_str() };
 
 	VAO blackholeVAO;
 	VBO blackholeVBO{ GL_DYNAMIC_DRAW };

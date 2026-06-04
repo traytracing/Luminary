@@ -13,6 +13,8 @@
 
 #include "Luminary/StarPoint.h"
 
+#include "Luminary/Core/AssetPath.h"
+
 class SkyRenderer {
 	friend class RenderSystem;
 
@@ -29,15 +31,15 @@ public:
 	void Render();
 	Camera& camera; // automatically updated in rendersystem
 private:
-	RenderProgram dustRenderProgram{ "SpaceDust.vert", "SpaceDust.frag" };
-	RenderProgram starRenderProgram{ "Star.vert", "Star.geom", "Star.frag" };
+	RenderProgram dustRenderProgram{ GetAssetPath("shaders/SpaceDust.vert").c_str(), GetAssetPath("shaders/SpaceDust.frag").c_str() };
+	RenderProgram starRenderProgram{ GetAssetPath("shaders/Star.vert").c_str(), GetAssetPath("shaders/Star.geom").c_str(), GetAssetPath("shaders/Star.frag").c_str() };
 
 	VAO dustVAO;
 	VAO starVAO;
 	VBO starVBO{ GL_STATIC_DRAW };
 
-	Texture largeStarsTex;
-	Texture smallStarsTex;
+	Texture largeStarsTex{ GetAssetPath("stars/stars-special.png").c_str(), 0};
+	Texture smallStarsTex{ GetAssetPath("stars/smallstars.png").c_str(), 1 };
 	
 	
 

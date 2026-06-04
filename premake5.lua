@@ -41,15 +41,35 @@ project "Luminary"
 		"%{prj.name}/vendor/stb_image/**.cpp",
 	}
 
-filter { "files:**.cu" }
-	buildaction "CustomBuild"
-	buildmessage "Compiling CUDA %{file.relpath}"
-	buildcommands {
-		"\"$(CUDA_PATH)/bin/nvcc.exe\" -c \"%{file.abspath}\" -o \"$(IntDir)%(Filename).obj\" -I\"%{prj.location}/src\" -I\"$(CUDA_PATH)/include\" -I\"../Luminary/vendor/glm\" -I\"../Luminary/vendor/Glad/include\" -I\"../Luminary/vendor/GLFW/include\" --use-local-env -Xcompiler \"/EHsc /MDd\""
-	}
-	buildoutputs {
-		"$(IntDir)%(Filename).obj"
-	}
+filter { "files:**.cu", "configurations:Debug" }
+    buildaction "CustomBuild"
+    buildmessage "Compiling CUDA %{file.relpath}"
+    buildcommands {
+        "\"$(CUDA_PATH)/bin/nvcc.exe\" -c \"%{file.abspath}\" -o \"$(IntDir)%(Filename).obj\" -I\"%{prj.location}/src\" -I\"$(CUDA_PATH)/include\" --use-local-env --std=c++20 -Xcompiler \"/EHsc /MDd /utf-8\""
+    }
+    buildoutputs {
+        "$(IntDir)%(Filename).obj"
+    }
+
+filter { "files:**.cu", "configurations:Release" }
+    buildaction "CustomBuild"
+    buildmessage "Compiling CUDA %{file.relpath}"
+    buildcommands {
+        "\"$(CUDA_PATH)/bin/nvcc.exe\" -c \"%{file.abspath}\" -o \"$(IntDir)%(Filename).obj\" -I\"%{prj.location}/src\" -I\"$(CUDA_PATH)/include\" --use-local-env --std=c++20 -Xcompiler \"/EHsc /MD /utf-8\""
+    }
+    buildoutputs {
+        "$(IntDir)%(Filename).obj"
+    }
+
+filter { "files:**.cu", "configurations:Dist" }
+    buildaction "CustomBuild"
+    buildmessage "Compiling CUDA %{file.relpath}"
+    buildcommands {
+        "\"$(CUDA_PATH)/bin/nvcc.exe\" -c \"%{file.abspath}\" -o \"$(IntDir)%(Filename).obj\" -I\"%{prj.location}/src\" -I\"$(CUDA_PATH)/include\" --use-local-env --std=c++20 -Xcompiler \"/EHsc /MD /utf-8\""
+    }
+    buildoutputs {
+        "$(IntDir)%(Filename).obj"
+    }
 
 filter {}
 
@@ -77,6 +97,10 @@ filter {}
 		"ImGui",
 		"opengl32.lib",
 		"cudart"
+	}
+
+	postbuildcommands {
+		'{COPYDIR} "%{prj.location}/assets" "%{cfg.targetdir}/assets"'
 	}
 
 	filter "system:windows"

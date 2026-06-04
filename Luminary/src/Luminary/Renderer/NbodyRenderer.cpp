@@ -17,7 +17,7 @@ std::vector<GLfloat> masses;
 GLfloat trailWidth = 5.0f;
 GLfloat axisWidth = 2.3f;
 
-int objectCount = 10;
+int objectCount = 20000;
 
 // change hte whole thing later
 NbodyRenderer::NbodyRenderer(Camera& POVCamera, SSBO& positionSSBO) : POVCamera(POVCamera), positionSSBO(positionSSBO) {

@@ -7,7 +7,7 @@
 #include <filesystem>
 
 
-InputDataProcessor::InputDataProcessor()
+InputDataProcessor::InputDataProcessor(const Settings& SRF) : SRF(SRF)
 {
 }
 InputDataProcessor::~InputDataProcessor()
@@ -24,7 +24,7 @@ void InputDataProcessor::SetChunkConfig(int newMaxDataChunkByteSize)
 void InputDataProcessor::SetFile(std::string file)
 {
 	Reset();
-	lf.filepath = file;
+	lf.filepath = file + ".lumen";
 	processorState = UnpackFile() ? ProcessorState::FileLoaded : ProcessorState::InvalidFileLoaded;
 }
 void InputDataProcessor::Reset() {
@@ -49,7 +49,7 @@ bool InputDataProcessor::InvalidFile() {
 bool InputDataProcessor::UnpackFile() {
 	if (std::filesystem::path(lf.filepath).extension() != ".lumen") return InvalidFile();
 
-	lf.chunk.fps = 120; // CHANGE TO GLOBAL FPS 
+	lf.chunk.fps = SRF.fps; // CHANGE TO GLOBAL FPS 
 
 	fs.open(lf.filepath, std::ios::in | std::ios::binary);
 	if (!fs) return InvalidFile();
@@ -97,15 +97,11 @@ bool InputDataProcessor::UpdatePositionData(int renderFrame) {
 		return false;
 	}
 
-	int dataFrameCountInChunk =
-		lf.chunk.endDataFrame - lf.chunk.startDataFrame;
 
-	int renderFrameCountInChunk =
-		lf.chunk.endRenderFrame - lf.chunk.startRenderFrame;
-
-	if (dataFrameCountInChunk <= 0 || renderFrameCountInChunk <= 0) {
-		return false;
-	}
+	// GPU
+	int dataFrameCountInChunk = lf.chunk.endDataFrame - lf.chunk.startDataFrame;
+	int renderFrameCountInChunk = lf.chunk.endRenderFrame - lf.chunk.startRenderFrame;
+	if (dataFrameCountInChunk <= 0 || renderFrameCountInChunk <= 0) return false;
 
 	GLsizeiptr ssboSize =
 		GLsizeiptr(renderFrameCountInChunk) *
@@ -153,8 +149,7 @@ bool InputDataProcessor::UpdatePositionData(int renderFrame) {
 
 	UpdateChunkDataCuda(cudaSSBO, cudaChunk);
 
-	int localRenderFrame =
-		lf.chunk.renderFrameIndex - lf.chunk.startRenderFrame;
+	int localRenderFrame = lf.chunk.renderFrameIndex - lf.chunk.startRenderFrame;
 
 	for (const auto& program : programs) {
 		program->Activate();

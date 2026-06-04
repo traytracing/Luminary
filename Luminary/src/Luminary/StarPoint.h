@@ -1,5 +1,4 @@
-#ifndef STAR_POINT_STRUCT_H
-#define STAR_POINT_STRUCT_H
+#pragma once
 
 #include <random>
 
@@ -39,5 +38,3 @@ struct StarPoint {
 		return { {phi, theta}, rot, s, type, sNum };
 	}
 };
-
-#endif

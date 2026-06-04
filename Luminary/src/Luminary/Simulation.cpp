@@ -1,105 +1,221 @@
 #include "Simulation.h"
 #include <iostream>
+#include <random>
+#include <fstream>
+#include <utility>
+#include <cmath>
+#include "Core/AssetPath.h"
 
-float Simulation::UpdateSim(std::vector<std::pair<std::vector<std::pair<glm::vec4, glm::vec4>>, GLfloat>>& sim, GLfloat deltaTime, GLfloat simTime) {
-	std::vector<std::pair<glm::vec4, glm::vec4>> allNew;
-	float dtgeo = std::pow(10, 20);
-	for (int i = 0; i < sim.back().first.size(); ++i) {
-		glm::vec4 force = glm::vec4(0.0f);
-		
 
-		for (int j = 0; j < sim.back().first.size(); ++j) {
-			if (j == i) continue;
-			glm::vec4 cur = sim.back().first[i].first;
-			glm::vec4 comp = sim.back().first[j].first;
-			glm::vec4 diff = comp - cur;
-			
-			float relDist = glm::length(diff);
-			force += GLfloat(k / pow(relDist, 2)) * glm::normalize(diff);
-			float relVel = glm::length(sim.back().first[i].second - sim.back().first[j].second) / glm::length(force);
-			dtgeo = std::min(relDist / relVel, dtgeo);
-		}
-		//force +=  -1.0f * glm::normalize(sim.back().first[i].first); // centripital force 
+bool Simulation::WriteSimToFile(const std::string& filename, const std::vector<std::pair<std::vector<glm::vec4>, GLfloat>>& OutSim) {
+    if (!OutSim.size()) return false;
+    
+    std::fstream fout;
+    fout.open(GetAssetPath("inputdata/" + filename + ".lumen"), std::ios::out | std::ios::binary);
 
-		glm::vec4 newVel = sim.back().first[i].second + force * deltaTime;
-		glm::vec4 newPos = sim.back().first[i].first + newVel * deltaTime;
-		allNew.push_back(std::pair(newPos, newVel));
-	}
+    int objectCount = OutSim[0].first.size();
+    fout.write(reinterpret_cast<char*>(&objectCount), sizeof(int));
 
-	sim.push_back(std::pair(allNew, simTime));
-	return dtgeo * 0.9f; // 0.25 good
+    int dataFrameCount = OutSim.size();
+    fout.write(reinterpret_cast<char*> (&dataFrameCount), sizeof(int));
+
+    std::vector<float> timesOut;
+    for (int i = 0; i < OutSim.size(); i++) {
+        timesOut.push_back(OutSim[i].second);
+    }
+    fout.write(reinterpret_cast<char*>(timesOut.data()), sizeof(float) * timesOut.size());
+
+    for (int i = 0; i < OutSim.size(); i++) {
+        std::vector<glm::vec4> curout;
+        curout = OutSim[i].first;
+        fout.write(reinterpret_cast<char*>(curout.data()), sizeof(glm::vec4) * curout.size());
+    }
+    fout.close();
+
+    const double bytes =
+        double(sizeof(int) * 2) +
+        double(sizeof(float)) * dataFrameCount +
+        double(sizeof(glm::vec4)) * objectCount * dataFrameCount;
+
+    std::cout
+        << "Wrote lumen sim to " << filename << ".lumen" << "\n"
+        << "objectCount=" << objectCount << "\n"
+        << "frameCount=" << dataFrameCount << "\n"
+        << "durationSeconds=" << timesOut.back() - timesOut.front() << "\n"
+        << "approxFileSizeMB=" << bytes / (1024.0 * 1024.0)
+        << std::endl;
+    return true;
+}
+void Simulation::MakeSim(const std::string& filename, const SimType& type) {
+    switch (type) {
+    case SimType::Original:
+        if (WriteSimToFile(filename, MakeOriginalSim())) return;
+        break;
+    case SimType::Spiral:
+        if (WriteSimToFile(filename, MakeSpiralSim())) return;
+        break;
+    }
+    
+    std::cerr << "Simulation Error" << std::endl;
 }
 
+std::vector<std::pair<std::vector<glm::vec4>, GLfloat>> Simulation::MakeOriginalSim() {
+    const int totalSimTime = 30;
+    const int objectCount = 30;
+    const GLfloat k = 10.0f;
 
-#include <random>
-int totalSimTime = 120;
-int randomNum = -1231495304;
-extern int objectCount;
-std::vector<std::pair<std::vector<glm::vec4>, GLfloat>> Simulation::makeFullSim() {
-	std::vector<std::pair<std::vector<std::pair<glm::vec4, glm::vec4>>, GLfloat>> sim;
+    std::random_device rd;
+    int seed = rd();
 
-	std::random_device rd;
-	int randomNum = rd();
-	//randomNum = 1053480021;
-	//randomNum = -1067049185;
-	//randomNum = 1465987027;
-	//randomNum = 242667232; // 8
-	randomNum = -1231495304; //16 & 17
-	//randomNum = -1288244767; //BAD
-	//randomNum = -1118661049;
-	std::cout << randomNum << std::endl;
-	std::mt19937 gen(randomNum);
-	std::uniform_real_distribution<float> angleDist(0.0f, 6.14);
-	std::uniform_real_distribution<float> radiusDist(30.0f, 40.0f);       // Disc radius
-	std::uniform_real_distribution<float> speedDist(4.0f, 8.0f);
-	std::uniform_real_distribution<float> disPos(-20.0f, 20.0f);
-	std::uniform_real_distribution<float> disVel(-0.5f, 0.5f);
-	std::uniform_real_distribution<float> disTime(0.0001f, 0.05f);
+    std::cout << "Seed: " << seed << std::endl;
+    std::mt19937 gen(seed);
+    std::uniform_real_distribution<float> disPos(-20.0f, 20.0f);
+    std::uniform_real_distribution<float> disVel(-0.5f, 0.5f);
 
-	//create objects initial position + vel
-	std::vector<std::pair<glm::vec4, glm::vec4>> initialObjects;
-	for (int i = 0; i < objectCount; i++) {
-		float angle = angleDist(gen);
-		float radius = radiusDist(gen);
-		glm::vec4 pos = glm::vec4(std::cos(angle), std::sin(angle), 0.0f, 0.0f) * radius;
+    // create objects initial position + vel
+    std::vector<std::pair<glm::vec4, glm::vec4>> initialObjects;
+    for (int i = 0; i < objectCount; i++) {
+        glm::vec4 pos = glm::vec4(disPos(gen), disPos(gen), disPos(gen), 0);
+        glm::vec4 vel = glm::vec4(disVel(gen), disVel(gen), disVel(gen), 0);
+        initialObjects.push_back(std::pair(pos, vel));
+    }
 
-		float speed = speedDist(gen);
-		glm::vec4 vel = glm::vec4(std::sin(angle), -std::cos(angle), 0.0f, 0.0f) * speed;
+    std::vector<std::pair<std::vector<std::pair<glm::vec4, glm::vec4>>, GLfloat>> sim;
+    sim.push_back(std::pair(initialObjects, 0.0f));
 
-		pos = glm::vec4(disPos(gen), disPos(gen), disPos(gen), 0);
-		vel = glm::vec4(disVel(gen), disVel(gen), disVel(gen), 0);
-		initialObjects.push_back(std::pair(pos, vel));
-	}
-	sim.push_back(std::pair(initialObjects, 0.0f));
-	
+    // simulate
+    GLfloat simTime = 0.0f;
+    float deltaTime = 0.0000000001f;
 
-	
-	//simulate 50 seconds
-	GLfloat simTime = 0.0f;
-	float nextdt = 0.0000000001f;
-	int i = 0;
-	while (simTime < totalSimTime) {
-		simTime += nextdt;
-		nextdt = UpdateSim(sim, nextdt, simTime);
-		i++;
-	}
+    auto updateSim = [&]()
+    {
+        std::vector<std::pair<glm::vec4, glm::vec4>> allNew;
+        float dtgeo = std::pow(10, 20);
+        for (int i = 0; i < sim.back().first.size(); ++i) {
+            glm::vec4 force{};
+            for (int j = 0; j < sim.back().first.size(); ++j) {
+                if (j == i) continue;
+                glm::vec4 cur = sim.back().first[i].first;
+                glm::vec4 comp = sim.back().first[j].first;
+                glm::vec4 diff = comp - cur;
 
+                float relDist = glm::length(diff);
+                force += GLfloat(k / pow(relDist, 2)) * glm::normalize(diff);
+                float relVel = glm::length(sim.back().first[i].second - sim.back().first[j].second) / glm::length(force);
+                float candidate = relDist / relVel;
+                if (candidate < dtgeo) {
+                    dtgeo = candidate;
+                }
+            }
 
-	//convert format
-	std::vector<std::pair<std::vector<glm::vec4>, GLfloat>> out;
-	for (int i = 0; i < sim.size(); i++) {
-		std::vector<glm::vec4> curObjs;
-		for (int j = 0; j < sim[i].first.size(); ++j) {
-			curObjs.push_back(sim[i].first[j].first);
-		}
-		
-		out.push_back(std::pair(curObjs, sim[i].second));
-	}
+            glm::vec4 newVel = sim.back().first[i].second + force * deltaTime;
+            glm::vec4 newPos = sim.back().first[i].first + newVel * deltaTime;
+            allNew.push_back(std::pair(newPos, newVel));
+        }
 
-	// not safe
-	//for (int i = 3999; i < 8000; i++) {
-		//out[i].first[17] = glm::vec4(std::nan(""));
-	//}
-	
-	return out;
+        sim.push_back(std::pair(allNew, simTime));
+        return dtgeo * 0.9f; // 0.25 good
+    };
+
+    while (simTime < totalSimTime) {
+        deltaTime = updateSim();
+        simTime += deltaTime;
+    }
+
+    // convert format
+    std::vector<std::pair<std::vector<glm::vec4>, GLfloat>> OutSim;
+    for (int i = 0; i < sim.size(); i++) {
+        std::vector<glm::vec4> curObjs;
+        for (int j = 0; j < sim[i].first.size(); ++j) {
+            curObjs.push_back(sim[i].first[j].first);
+        }
+
+        OutSim.push_back(std::pair(curObjs, sim[i].second));
+    }
+
+    return OutSim;
+}
+std::vector<std::pair<std::vector<glm::vec4>, GLfloat>> Simulation::MakeSpiralSim() {
+    const int objectCount = 20000;
+    const int frameCount = 2000;
+    const GLfloat fps = 120.0f;
+
+    const GLfloat pi = 3.14159265358979323846f;
+    const GLfloat twoPi = 2.0f * pi;
+
+    std::vector<std::pair<std::vector<glm::vec4>, GLfloat>> sim;
+    sim.reserve(frameCount);
+
+    std::mt19937 rng(12345);
+
+    const int armCount = 4;
+
+    // Scale radius outward as object count increases.
+    // sqrt scaling keeps density fairly stable.
+    const GLfloat baseRadiusScale = 1.2f;
+    const GLfloat maxRadius = baseRadiusScale * std::sqrt(static_cast<GLfloat>(objectCount));
+
+    std::uniform_real_distribution<GLfloat> armOffsetDist(-0.3f, 0.3f);
+    std::uniform_real_distribution<GLfloat> heightDist(-0.5f, 0.5f);
+    std::uniform_real_distribution<GLfloat> jitterDist(-0.15f, 0.15f);
+
+    std::vector<GLfloat> baseRadius(objectCount);
+    std::vector<GLfloat> baseAngle(objectCount);
+    std::vector<GLfloat> baseHeight(objectCount);
+    std::vector<GLfloat> angularSpeed(objectCount);
+
+    for (int i = 0; i < objectCount; ++i) {
+        GLfloat u = (static_cast<GLfloat>(i) + 1.0f) / static_cast<GLfloat>(objectCount);
+
+        // sqrt(u) gives a more even disk density.
+        GLfloat r = maxRadius * std::sqrt(u);
+
+        int arm = i % armCount;
+
+        baseRadius[i] = r;
+        baseHeight[i] = heightDist(rng) * (0.15f + 0.02f * r);
+
+        // Spiral arm formula
+        baseAngle[i] =
+            (twoPi * static_cast<GLfloat>(arm) / static_cast<GLfloat>(armCount)) +
+            r * 0.32f +
+            armOffsetDist(rng);
+
+        // Inner stars rotate faster.
+        angularSpeed[i] = 3.5f / std::sqrt(r + 1.0f);
+    }
+
+    for (int frame = 0; frame < frameCount; ++frame) {
+        GLfloat t = static_cast<GLfloat>(frame) / fps;
+
+        std::vector<glm::vec4> positions;
+        positions.reserve(objectCount);
+
+        for (int i = 0; i < objectCount; ++i) {
+            GLfloat r = baseRadius[i];
+
+            GLfloat theta = baseAngle[i] + angularSpeed[i] * t;
+
+            // Slight breathing motion
+            GLfloat pulse = 1.0f + 0.03f * std::sin(t * 1.8f + r * 0.4f);
+
+            GLfloat x = std::cos(theta) * r * pulse;
+            GLfloat z = std::sin(theta) * r * pulse;
+
+            GLfloat y =
+                baseHeight[i] +
+                0.08f * std::sin(theta * 2.0f + t * 1.2f);
+
+            // Tiny jitter to keep it from looking too perfect
+            x += jitterDist(rng) * 0.05f;
+            y += jitterDist(rng) * 0.03f;
+            z += jitterDist(rng) * 0.05f;
+
+            positions.emplace_back(x, y, z, static_cast<GLfloat>(i));
+        }
+
+        sim.emplace_back(std::move(positions), t);
+    }
+
+    return sim;
 }

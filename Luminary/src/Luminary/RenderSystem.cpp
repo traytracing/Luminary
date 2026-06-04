@@ -38,35 +38,32 @@ GLFWwindow* RenderSystem::MakeWindow() {
 	ImGui::StyleColorsDark();
 	return window;
 }
+RenderSystem::~RenderSystem() {
+	glfwDestroyWindow(window);
+}
+RenderSystem::RenderSystem() {
+	static bool initialized = false;
+	if (initialized) throw std::runtime_error("RenderSystem already initialized");
+	initialized = true;
 
+	glfwSetWindowSizeCallback(window, inputManager.window_size_callback);
+	glfwSetScrollCallback(window, inputManager.scroll_callback);
+	glfwSetWindowUserPointer(window, &inputManager);
 
-void RenderSystem::Render() {
-	//grid
-	
-
-	skyRenderer.Render();
-	// camera stuff
-	nbodyRenderer.Render();
-	
-	glEnable(GL_DEPTH_TEST);	glDepthMask(GL_FALSE);
-	glEnable(GL_BLEND);
-	glBlendEquation(GL_FUNC_ADD);
-	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-	// should this grid reall be here?
-	gridRenderProgram.Activate();
-	POVCamera.UploadPosition(gridRenderProgram, "camPos");
-	POVCamera.UploadMatrix(gridRenderProgram, "MVP");
-
-	vaoooo.Bind();
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+	inputDataProcessor.SetFile(GetAssetPath("inputdata/InputData").c_str()); // REMOVE LATER
+	inputDataProcessor.AddRenderProgram(nbodyRenderer.blackholeRenderProgram);
 }
 
-int fps = 120; // fix main loop with realtime fps
+void RenderSystem::Render() {
+	skyRenderer.Render();
+	nbodyRenderer.Render();
+	gridRenderer.Render();
+}
+
+
 extern int curView;
 extern glm::vec4 trailColor;
 int mult = 1;
-extern int randomNum;
 extern GLfloat realTime;
 
 #include "imgui.h"
@@ -117,8 +114,7 @@ void finish_ffmpeg_pipe(FILE* ffmpegPipe) {
 
 //TODO lock the resolution when rendering 
 void RenderSystem::Run() {
-	inputDataProcessor.SetFile("blah.lumen");
-	inputDataProcessor.AddRenderProgram(nbodyRenderer.blackholeRenderProgram);
+	
 	// ETC LATER inputDataProcessor.AddRenderProgram(nbodyRenderer.blackholeRenderProgram);
 
 
@@ -150,7 +146,7 @@ void RenderSystem::Run() {
 		//ImGui::Text("This is ImGui running on OpenGL 4.6!");
 		float fpsim = ImGui::GetIO().Framerate;
 		ImGui::Text("FPS: %.1f", fpsim);
-		ImGui::Text("Seed: %d", randomNum);
+		//ImGui::Text("Seed: %d", randomNum);
 		ImGui::SliderInt("View: ", &curView, 0, 29);
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 4));
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
@@ -252,27 +248,4 @@ void RenderSystem::Run() {
 //finish_ffmpeg_pipe(ffmpegPipe);
 
 this->~RenderSystem();
-
-
-
-
-
-
-
-}
-
-
-
-RenderSystem::RenderSystem() {
-	static bool initialized = false;
-	if (initialized) throw std::runtime_error("RenderSystem already initialized");
-	initialized = true;
-
-	glfwSetWindowSizeCallback(window, inputManager.window_size_callback);
-	glfwSetScrollCallback(window, inputManager.scroll_callback);
-	glfwSetWindowUserPointer(window, &inputManager);
-}
-
-RenderSystem::~RenderSystem() {
-	glfwDestroyWindow(window);
 }

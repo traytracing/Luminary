@@ -2,6 +2,4 @@
 .vs/
 bin/
 bin-int/
-
-# Files
-*.userLuminary/InputData.lumen 
+Luminary/assets/inputdata
