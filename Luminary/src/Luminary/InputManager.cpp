@@ -15,9 +15,15 @@ InputManager::InputManager(Settings& settings, GLFWwindow* window) : settings(se
 	glfwSetWindowUserPointer(window, this);
 }
 
-
 void InputManager::window_size_callback(GLFWwindow* window, int width, int height) {
 	InputManager* self = static_cast<InputManager*>(glfwGetWindowUserPointer(window));
+	if (self->settings.appState == AppStateType::Rendering) {
+		glm::uvec2 lockedSize = self->settings.w_Dimensions;
+		glfwSetWindowSize(window, lockedSize.x, lockedSize.y);
+	}
+	else {
+		self->settings.w_Dimensions = glm::uvec2(width, height);
+	}
 }
 void InputManager::scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	InputManager* self = static_cast<InputManager*>(glfwGetWindowUserPointer(window));
@@ -26,7 +32,6 @@ void InputManager::mouse_button_callback(GLFWwindow* window, int button, int act
 	InputManager* self = static_cast<InputManager*>(glfwGetWindowUserPointer(window));
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
 		self->settings.LeftMouseDown = GL_TRUE;
-
 	}
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
 		self->settings.LeftMouseDown = GL_FALSE;

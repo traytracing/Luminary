@@ -117,7 +117,7 @@ public:
 	bool InvalidFile();
 	bool UnpackFile();
 
-	bool UpdateDataChunk(int renderFrame);
+	bool UpdateDataChunk(int renderFrame, bool& chunkReloaded);
 
 	bool EnsureTrailSSBO();
 	bool RegisterTrailSSBOIfNeeded();

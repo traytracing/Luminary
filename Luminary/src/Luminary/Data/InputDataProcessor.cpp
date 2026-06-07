@@ -65,7 +65,7 @@ bool InputDataProcessor::InvalidFile() {
 bool InputDataProcessor::UnpackFile() {
 	if (std::filesystem::path(lf.filepath).extension() != ".lumen") return InvalidFile();
 
-	lf.chunk.fps = SRF.fps; // CHANGE TO GLOBAL FPS 
+	lf.chunk.fps = SRF.fps;
 
 	fs.open(lf.filepath, std::ios::in | std::ios::binary);
 	if (!fs) return InvalidFile();
@@ -82,14 +82,19 @@ bool InputDataProcessor::UnpackFile() {
 }
  
 
-bool InputDataProcessor::UpdateDataChunk(int renderFrame) {
-	if(lf.IsRenderFrameInsideChunk(renderFrame)) {
+bool InputDataProcessor::UpdateDataChunk(int renderFrame, bool& chunkReloaded) {
+	chunkReloaded = false;
+
+	if (lf.IsRenderFrameInsideChunk(renderFrame) && lf.chunk.fps == SRF.fps) {
 		lf.chunk.renderFrameIndex = renderFrame;
 		return true;
 	}
 
+	lf.chunk.fps = SRF.fps;
 	lf.InitChunk(renderFrame);
 	if (!lf.IsRenderFrameInsideChunk(renderFrame) && renderFrame != 0) return false;
+
+	chunkReloaded = true;
 	std::cout << "LOADING CHUNK AT RENDERFRAME: " << renderFrame << std::endl;
 
 	uint64_t jumpToPos =
@@ -110,7 +115,8 @@ bool InputDataProcessor::UpdatePositionData(int renderFrame) {
 		return false;
 	}
 
-	if (!UpdateDataChunk(renderFrame)) {
+	bool chunkReloaded = false;
+	if (!UpdateDataChunk(renderFrame, chunkReloaded)) {
 		return false;
 	}
 
@@ -126,6 +132,9 @@ bool InputDataProcessor::UpdatePositionData(int renderFrame) {
 		GLsizeiptr(sizeof(glm::vec4));
 
 	bool resized = positionSSBO.Resize(ssboSize);
+
+	bool needsCudaUpdate = chunkReloaded || resized || !cudaSSBO;
+
 
 	if (resized || !cudaSSBO) {
 		if (cudaSSBO) {
@@ -147,24 +156,27 @@ bool InputDataProcessor::UpdatePositionData(int renderFrame) {
 		}
 	}
 
-	DataChunkCuda cudaChunk{};
+	if (needsCudaUpdate) {
+		DataChunkCuda cudaChunk{};
 
-	cudaChunk.objectCount = lf.objectCount;
-	cudaChunk.dataFrameCount = dataFrameCountInChunk;
+		cudaChunk.objectCount = lf.objectCount;
+		cudaChunk.dataFrameCount = dataFrameCountInChunk;
 
-	cudaChunk.times = lf.times.data() + lf.chunk.startDataFrame;
-	cudaChunk.positions = reinterpret_cast<const float4*>(lf.chunk.positions.data());
+		cudaChunk.times = lf.times.data() + lf.chunk.startDataFrame;
+		cudaChunk.positions = reinterpret_cast<const float4*>(lf.chunk.positions.data());
 
-	cudaChunk.fps = lf.chunk.fps;
+		cudaChunk.fps = lf.chunk.fps;
 
-	cudaChunk.startRenderFrame = lf.chunk.startRenderFrame;
-	cudaChunk.renderFrameCount = renderFrameCountInChunk;
+		cudaChunk.startRenderFrame = lf.chunk.startRenderFrame;
+		cudaChunk.renderFrameCount = renderFrameCountInChunk;
 
-	cudaChunk.startRenderTime =
-		lf.times.front() +
-		float(lf.chunk.startRenderFrame) / float(lf.chunk.fps);
+		cudaChunk.startRenderTime =
+			lf.times.front() +
+			float(lf.chunk.startRenderFrame) / float(lf.chunk.fps);
 
-	UpdateChunkDataCuda(cudaSSBO, cudaChunk);
+		UpdateChunkDataCuda(cudaSSBO, cudaChunk);
+	}
+
 
 	int localRenderFrame = lf.chunk.renderFrameIndex - lf.chunk.startRenderFrame;
 
@@ -284,4 +296,10 @@ bool InputDataProcessor::CopyCurrentFrameToTrail(int renderFrame, int localRende
 	}
 
 	return true;
+}
+
+bool InputDataProcessor::AtLastRenderFrame() {
+	int maxRenderFrame = static_cast<int>((lf.times.back() - lf.times.front()) * lf.chunk.fps);
+
+	return lf.chunk.renderFrameIndex >= maxRenderFrame;
 }

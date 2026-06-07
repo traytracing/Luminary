@@ -88,7 +88,7 @@ void RenderSystem::Loop() {
 		glfwSwapBuffers(window);
 	}
 }
-//glfwSwapInterval(0); handle in gui
+
 
 void RenderSystem::LaunchMenuLoop() {
 	glViewport(0, 0, settings.w_Dimensions.x, settings.w_Dimensions.y);
@@ -143,6 +143,7 @@ void RenderSystem::RenderingLoop() {
 	if (inputDataProcessor.AtLastRenderFrame()) {
 		settings.appState = AppStateType::InScene;
 		startVideo = true;
+		videoManager.End();
 	}
 }
 
