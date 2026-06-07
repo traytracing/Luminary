@@ -113,6 +113,7 @@
     </ClInclude>
     <ClInclude Include="src\Luminary\AppStateType.h" />
     <ClInclude Include="src\Luminary\VideoManager.h" />
+    <ClInclude Include="src\Luminary\Gui.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Luminary\Core\Camera.cpp">
@@ -176,6 +177,7 @@
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
     <ClCompile Include="src\Luminary\VideoManager.cpp" />
+    <ClCompile Include="src\Luminary\Gui.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="vendor\glm\glm">

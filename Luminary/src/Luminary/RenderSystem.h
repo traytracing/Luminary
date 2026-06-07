@@ -7,6 +7,7 @@
 #include "Renderer/NbodyRenderer.h"
 #include "Renderer/GridRenderer.h"
 #include "VideoManager.h"
+#include "Gui.h"
 
 class RenderSystem {
 public:
@@ -27,6 +28,12 @@ private:
 
 	InputManager inputManager{ settings, window };
 	void Link();
+	Gui gui{ settings, window };
+
+	void Loop();
+	void LaunchMenuLoop();
+	void InSceneLoop();
+	void RenderingLoop();
 
 	Camera POVCamera{ settings };
 	Camera SkyCamera{ settings };
@@ -34,7 +41,6 @@ private:
 	NbodyRenderer nbodyRenderer{ POVCamera, settings, inputDataProcessor };
 	SkyRenderer skyRenderer{ 1000, SkyCamera };
 	GridRenderer gridRenderer{ POVCamera };
-	void Render();
 
 	VideoManager videoManager{ settings };
 };

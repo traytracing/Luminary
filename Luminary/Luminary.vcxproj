@@ -159,6 +159,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\Luminary\Gui.h" />
     <ClInclude Include="src\Luminary\Renderer\Structs\ObjectAttributes.h" />
     <ClInclude Include="src\Luminary\Core\AssetPath.h" />
     <ClInclude Include="src\Luminary\Core\Camera.h" />
@@ -172,7 +173,6 @@
     <ClInclude Include="src\Luminary\Core\VBO.h" />
     <ClInclude Include="src\Luminary\Data\InputDataProcessor.h" />
     <ClInclude Include="src\Luminary\Data\InputDataProcessorCuda.h" />
-    <ClInclude Include="src\Luminary\AppStateType.h" />
     <ClInclude Include="src\Luminary\InputManager.h" />
     <ClInclude Include="src\Luminary\RenderSystem.h" />
     <ClInclude Include="src\Luminary\Renderer\GridRenderer.h" />
@@ -198,6 +198,7 @@
     <ClCompile Include="src\Luminary\Core\VAO.cpp" />
     <ClCompile Include="src\Luminary\Core\VBO.cpp" />
     <ClCompile Include="src\Luminary\Data\InputDataProcessor.cpp" />
+    <ClCompile Include="src\Luminary\Gui.cpp" />
     <ClCompile Include="src\Luminary\InputManager.cpp" />
     <ClCompile Include="src\Luminary\Main.cpp" />
     <ClCompile Include="src\Luminary\RenderSystem.cpp" />

@@ -2,7 +2,6 @@
 #include <iostream>
 #include "Core/AssetPath.h"
 
-
 VideoManager::VideoManager(const Settings& SRF) : SRF(SRF) {
     ffmpegPBO.Bind();
     glBufferData(GL_PIXEL_PACK_BUFFER, frameBytes, nullptr, GL_STREAM_READ);
@@ -10,17 +9,18 @@ VideoManager::VideoManager(const Settings& SRF) : SRF(SRF) {
 }
 
 void VideoManager::UpdateOutputFile(const std::string filename) {
-    if (SRF.renderLock) return;
+    outputPath = GetAssetPath((std::filesystem::path("outputs") / (filename + ".mp4")).string());
+}
+
+void VideoManager::Start() {
     End();
 
     static const std::string ffmpegDir = GetAssetPath((std::filesystem::path("vendor") / "ffmpeg").string());
     static const std::string ffmpegExe = GetAssetPath((std::filesystem::path("vendor") / "ffmpeg" / "ffmpeg.exe").string());
-    const std::string outputDir = GetAssetPath(std::filesystem::path("outputs").string());
+    static const std::string outputDir = GetAssetPath(std::filesystem::path("outputs").string());
     std::filesystem::create_directories(outputDir);
-    const std::string outputPath = GetAssetPath((std::filesystem::path("outputs") / (filename + ".mp4")).string());
 
     char cmd[4096];
-
     std::snprintf(cmd, sizeof(cmd),
         "cd /d \"%s\" && "
         "\"%s\" -loglevel info -report -y "
@@ -48,10 +48,8 @@ void VideoManager::UpdateOutputFile(const std::string filename) {
         throw std::runtime_error("Failed to start ffmpeg.");
 }
 
-
-
 void VideoManager::AppendFrame() {
-    if (!ffmpegPipe || !SRF.renderLock) return;
+    if (!ffmpegPipe || SRF.appState != AppStateType::Rendering) return;
 
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
     glReadBuffer(GL_BACK);

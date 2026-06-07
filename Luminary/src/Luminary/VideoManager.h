@@ -16,11 +16,13 @@ public:
 	VideoManager(const Settings& SRF);
 
 	void UpdateOutputFile(const std::string filename);
+	void Start();
 	void AppendFrame();
 	void End();
 private:
 	const Settings& SRF;
 
+	std::string outputPath;
 	FILE* ffmpegPipe{ nullptr };
 	const int bytesPerPixel = 4; // BGRA8
 	const GLsizeiptr frameBytes = GLsizeiptr(SRF.w_Dimensions.x * SRF.w_Dimensions.y * bytesPerPixel);

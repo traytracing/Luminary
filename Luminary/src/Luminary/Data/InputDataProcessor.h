@@ -109,6 +109,8 @@ public:
 	SSBO& GetSSBORef() { return positionSSBO; }
 	SSBO& GetTrailSSBORef() { return trailHistorySSBO; }
 	void AddRenderProgram(RenderProgram& program) { programs.push_back(&program); }
+
+	bool AtLastRenderFrame();
 public:
 	void Cleanup();
 	void Reset();

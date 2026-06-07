@@ -5,6 +5,7 @@
 #include <device_launch_parameters.h>
 #include <cuda_gl_interop.h>
 #include <filesystem>
+#include <Luminary/Core/AssetPath.h>
 
 
 InputDataProcessor::InputDataProcessor(const Settings& SRF) : SRF(SRF)
@@ -24,7 +25,7 @@ void InputDataProcessor::SetChunkConfig(int newMaxDataChunkByteSize)
 void InputDataProcessor::SetFile(std::string file)
 {
 	Reset();
-	lf.filepath = file + ".lumen";
+	lf.filepath = GetAssetPath("inputdata/" + file + ".lumen").c_str();
 	processorState = UnpackFile() ? ProcessorState::FileLoaded : ProcessorState::InvalidFileLoaded;
 }
 void InputDataProcessor::Cleanup() {

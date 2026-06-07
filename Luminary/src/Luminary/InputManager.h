@@ -17,7 +17,7 @@ public:
     ~InputManager();
     InputManager(Settings& settings, GLFWwindow* window);
 
-    void Update(GLFWwindow* window);
+    void Update();
 
     static void window_size_callback(GLFWwindow* window, int width, int height);
     static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
