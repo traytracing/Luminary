@@ -6,6 +6,7 @@
 #include "Renderer/SkyRenderer.h"
 #include "Renderer/NbodyRenderer.h"
 #include "Renderer/GridRenderer.h"
+#include "VideoManager.h"
 
 class RenderSystem {
 public:
@@ -22,6 +23,7 @@ private:
 	Settings settings{};
 	GLFWwindow* MakeWindow();
 	GLFWwindow* window = MakeWindow();
+	void Cleanup();
 
 	InputManager inputManager{ settings, window };
 	void Link();
@@ -33,4 +35,6 @@ private:
 	SkyRenderer skyRenderer{ 1000, SkyCamera };
 	GridRenderer gridRenderer{ POVCamera };
 	void Render();
+
+	VideoManager videoManager{ settings };
 };

@@ -110,6 +110,7 @@ public:
 	SSBO& GetTrailSSBORef() { return trailHistorySSBO; }
 	void AddRenderProgram(RenderProgram& program) { programs.push_back(&program); }
 public:
+	void Cleanup();
 	void Reset();
 	bool InvalidFile();
 	bool UnpackFile();

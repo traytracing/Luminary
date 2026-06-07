@@ -186,6 +186,7 @@
     <ClInclude Include="src\Platform\OpenGL\imgui_impl_opengl3_loader.h" />
     <ClInclude Include="vendor\stb_image\stb_image.h" />
     <ClInclude Include="vendor\stb_image\stb_image_write.h" />
+    <ClInclude Include="src\Luminary\VideoManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Luminary\Core\Camera.cpp" />
@@ -208,6 +209,7 @@
     <ClCompile Include="src\Platform\OpenGL\imgui_impl_opengl3.cpp" />
     <ClCompile Include="vendor\stb_image\stb_image.cpp" />
     <ClCompile Include="vendor\stb_image\stb_image_write.cpp" />
+    <ClCompile Include="src\Luminary\VideoManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="vendor\glm\glm" />

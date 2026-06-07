@@ -12,6 +12,8 @@ struct Settings {
 	int fps{ Initialfps };
 	AppStateType appState{ AppStateType::Boot };
 	
+	bool renderLock{ false };
+
 	bool cameraLock{}; // change to checking if in render state instead
 	glm::dvec2 MousePosition{}, LMousePosition{}, DMousePosition{};
 	bool LeftMouseDown{};

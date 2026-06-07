@@ -27,7 +27,7 @@ void InputDataProcessor::SetFile(std::string file)
 	lf.filepath = file + ".lumen";
 	processorState = UnpackFile() ? ProcessorState::FileLoaded : ProcessorState::InvalidFileLoaded;
 }
-void InputDataProcessor::Reset() {
+void InputDataProcessor::Cleanup() {
 	if (cudaSSBO) {
 		cudaGraphicsUnregisterResource(cudaSSBO);
 		cudaSSBO = nullptr;
@@ -38,11 +38,21 @@ void InputDataProcessor::Reset() {
 		cudaTrailSSBO = nullptr;
 	}
 
-	if (fs.is_open()) fs.close();
-	fs.clear();
+	if (fs.is_open()) {
+		fs.close();
+	}
 
-	lf = LumenFile();
+	fs.clear();
+}
+void InputDataProcessor::Reset() {
+	Cleanup();
+
+	lf = LumenFile{};
 	processorState = ProcessorState::NoFileLoaded;
+
+	trailWriteFrame = 0;
+	previousRenderFrame = -1;
+	validTrailFrameCount = 0;
 }
 bool InputDataProcessor::InvalidFile() {
 	Reset();
@@ -65,8 +75,9 @@ bool InputDataProcessor::UnpackFile() {
 	lf.times.resize(lf.dataFrameCount);
 	fs.read(reinterpret_cast<char*>(lf.times.data()), lf.dataFrameCount * sizeof(float)); if (lf.times.size() <= 0) return InvalidFile();
 
-	if (!UpdatePositionData(lf.times.front())) return InvalidFile();
+	if (!UpdatePositionData(0)) return InvalidFile();
 	processorState = ProcessorState::FileLoaded;
+	return true;
 }
  
 
@@ -273,99 +284,3 @@ bool InputDataProcessor::CopyCurrentFrameToTrail(int renderFrame, int localRende
 
 	return true;
 }
-
-//DRAW THIS
-/*
-bool InputDataProcessor::UpdatePositionData(int renderFrame) {
-	if (!lf.IsTimeValidRenderFrame(renderFrame)) return false;
-
-	if (!UpdateDataChunk(renderFrame)) return false;
-	
-
-
-	// GPU side
-
-
-
-
-	int startFrame = lf.chunk.startDataFrame;
-
-	// One past the last frame in this lf.chunk.
-	// If startFrame = 0 and dataFrameCount = 416,
-	// then chunkEndExclusive = 416.
-	int chunkEndExclusive = startFrame + lf.chunk.dataFrameCount;
-
-	// The last actual frame loaded into lf.chunk.positions.
-	// If startFrame = 0 and dataFrameCount = 416,
-	// then lastLoadedFrame = 415.
-	int lastLoadedFrame = std::min(
-		chunkEndExclusive - 1,
-		lf.dataFrameCount - 1
-	);
-
-	// Duration covered by the frames that are actually loaded.
-	float time = lf.times[lastLoadedFrame] - lf.times[startFrame];
-
-	lf.chunk.renderFrameCount =
-		static_cast<int>(std::ceil(time * lf.chunk.fps)) + 1;
-
-	int ssbosize =
-		lf.chunk.renderFrameCount * lf.objectCount * sizeof(glm::vec4);
-
-	std::cout
-		<< "Updating Chunk | "
-		<< "start=" << startFrame
-		<< " lastLoaded=" << lastLoadedFrame
-		<< " endExclusive=" << chunkEndExclusive
-		<< " dataFrames=" << lf.chunk.dataFrameCount
-		<< " startTime=" << lf.times[startFrame]
-		<< " lastTime=" << lf.times[lastLoadedFrame]
-		<< " duration=" << time
-		<< " renderFrames=" << lf.chunk.renderFrameCount
-		<< std::endl;
-
-	if (cudaSSBO) {
-		cudaGraphicsUnregisterResource(cudaSSBO);
-		cudaSSBO = nullptr;
-	}
-
-	positionSSBO.Resize(ssbosize);
-
-	cudaError_t regErr = cudaGraphicsGLRegisterBuffer(
-		&cudaSSBO,
-		positionSSBO.GetID(),
-		cudaGraphicsRegisterFlagsWriteDiscard
-	);
-
-	if (regErr != cudaSuccess) {
-		std::cerr << "CUDA Error: cudaGraphicsGLRegisterBuffer : "
-			<< cudaGetErrorString(regErr) << std::endl;
-		cudaSSBO = nullptr;
-		return;
-	}
-	//positionSSBO.SetData(lf.chunk.positions.data(), lf.chunk.positions.size() * sizeof(glm::vec4));
-
-	DataChunkCuda cudaChunk{};
-
-	cudaChunk.objectCount = lf.objectCount;
-	cudaChunk.dataFrameCount = lf.dataFrameCount;
-	cudaChunk.times = lf.times.data() + lf.chunk.startDataFrame;
-	cudaChunk.startDataFrame = lf.chunk.startDataFrame;
-	cudaChunk.dataFrameCount = lf.chunk.dataFrameCount;
-	cudaChunk.positions = reinterpret_cast<const float4*>(lf.chunk.positions.data());
-	cudaChunk.fps = lf.chunk.fps;
-	cudaChunk.renderFrameCount = lf.chunk.renderFrameCount;
-
-	UpdateChunkDataCuda(cudaSSBO, cudaChunk);
-
-
-
-	////
-
-
-	for (const auto& program : programs) {
-		program.Activate();
-		glUniform1i(glGetUniformLocation(program.ID, "PositionFrameOffset"), lf.chunk.renderFrameIndex);
-	}
-	return true;
-}*/
