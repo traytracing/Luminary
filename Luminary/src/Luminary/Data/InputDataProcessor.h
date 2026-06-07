@@ -19,7 +19,7 @@ enum class ProcessorState {
 };
 
 struct LumenFile { // object count and frame count (and their vectors) are gauranteed to be atleast 1
-	int MaxDataChunkByteSize = 9000000;
+	int MaxDataChunkByteSize = 20000;
 
 	std::string filepath;
 	int objectCount{ -1 };
@@ -105,14 +105,21 @@ public:
 
 	bool UpdatePositionData(int renderFrame);
 
+	int GetObjectCount() { return lf.objectCount; }
 	SSBO& GetSSBORef() { return positionSSBO; }
+	SSBO& GetTrailSSBORef() { return trailHistorySSBO; }
 	void AddRenderProgram(RenderProgram& program) { programs.push_back(&program); }
-private:
+public:
 	void Reset();
 	bool InvalidFile();
 	bool UnpackFile();
 
 	bool UpdateDataChunk(int renderFrame);
+
+	bool EnsureTrailSSBO();
+	bool RegisterTrailSSBOIfNeeded();
+	bool CopyCurrentFrameToTrail(int renderFrame, int localRenderFrame);
+	void ResetTrailHistory();
 
 	ProcessorState processorState{ ProcessorState::NoFileLoaded };
 	std::fstream fs{};
@@ -120,6 +127,14 @@ private:
 
 	SSBO positionSSBO;
 	cudaGraphicsResource* cudaSSBO{ nullptr };
+	SSBO trailHistorySSBO;
+	cudaGraphicsResource* cudaTrailSSBO{ nullptr };
+
+	int trailFrameCount{ 240 };
+	int trailWriteFrame{ 0 };
+	int previousRenderFrame{ -1 };
+	int validTrailFrameCount{ 0 };
+
 	std::vector<RenderProgram*> programs;
 	const Settings& SRF;
 };

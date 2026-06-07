@@ -3,7 +3,6 @@
 #include "InputManager.h"
 #include "Settings.h"
 #include "Core/Camera.h"
-#include "Data/InputDataProcessor.h"
 #include "Renderer/SkyRenderer.h"
 #include "Renderer/NbodyRenderer.h"
 #include "Renderer/GridRenderer.h"
@@ -24,13 +23,13 @@ private:
 	GLFWwindow* MakeWindow();
 	GLFWwindow* window = MakeWindow();
 
-	Camera POVCamera;
-	Camera SkyCamera;
+	InputManager inputManager{ settings, window };
+	void Link();
 
-	InputManager inputManager{POVCamera, SkyCamera};
+	Camera POVCamera{ settings };
+	Camera SkyCamera{ settings };
 	InputDataProcessor inputDataProcessor{ settings };
-
-	NbodyRenderer nbodyRenderer{ POVCamera, inputDataProcessor.GetSSBORef() };
+	NbodyRenderer nbodyRenderer{ POVCamera, settings, inputDataProcessor };
 	SkyRenderer skyRenderer{ 1000, SkyCamera };
 	GridRenderer gridRenderer{ POVCamera };
 	void Render();

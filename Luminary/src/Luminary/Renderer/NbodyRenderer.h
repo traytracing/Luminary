@@ -1,22 +1,18 @@
-#ifndef NBODY_RENDERER_CLASS_H
-#define NBODY_RENDERER_CLASS_H
+#pragma once
 
 #include <vector>
-#include <iostream>
+
+#include "Luminary/Settings.h"
+#include "Luminary/Data/InputDataProcessor.h"
+
+#include "Luminary/Core/Camera.h"
 #include "Luminary/Core/RenderProgram.h"
 #include "Luminary/Core/VAO.h"
 #include "Luminary/Core/VBO.h"
-#include "Luminary/Core/Camera.h"
+#include "Luminary/Core/AssetPath.h"
 
-#include "Luminary/TrailPoint.h"
-#include "Luminary/BlackholePoint.h"
+#include "Luminary/Renderer/Structs/ObjectAttributes.h"
 
-#include "Luminary/Core/SSBO.h"
-#include <Luminary/Core/AssetPath.h>
-
-
-
-// REVIEW BLACKHOLE POINTS AND ACTUAL RENDERING LATER
 class NbodyRenderer {
 	friend class RenderSystem;
 public:
@@ -25,31 +21,27 @@ public:
 	NbodyRenderer(NbodyRenderer&&) = delete;
 	NbodyRenderer& operator=(NbodyRenderer&&) = delete;
 public:
-	NbodyRenderer(Camera& POVCamera, SSBO& positionSSBO);
+	NbodyRenderer(Camera& POVCamera, const Settings& SRF, InputDataProcessor& IDPR);
 	~NbodyRenderer();
 
 	void Render();
-private: // change Render Program shader names later
-	RenderProgram blackholeRenderProgram{ GetAssetPath("shaders/default.vert").c_str(), GetAssetPath("shaders/default.geom").c_str(), GetAssetPath("shaders/Planet.frag").c_str() };
-	RenderProgram trailRenderProgram{ GetAssetPath("shaders/line.vert").c_str(), GetAssetPath("shaders/line.frag").c_str() };
-
-	VAO blackholeVAO;
-	VBO blackholeVBO{ GL_DYNAMIC_DRAW };
-	SSBO& positionSSBO;
-
-	VAO trailVAO;
-	VBO trailVBO{ GL_DYNAMIC_DRAW };
-	
+private:
+	const Settings& SRF;
+	InputDataProcessor& IDPR;
 	Camera& POVCamera;
 
-	std::vector<BlackholePoint> objects;
-	std::vector<TrailPoint> lines;
+	RenderProgram objectRenderProgram{ GetAssetPath("shaders/object.vert").c_str(), GetAssetPath("shaders/object.geom").c_str(), GetAssetPath("shaders/blackhole.frag").c_str() };
+	RenderProgram trailRenderProgram{ GetAssetPath("shaders/line.vert").c_str(), GetAssetPath("shaders/line.frag").c_str() };
+	RenderProgram axisRenderProgram{ GetAssetPath("shaders/axis.vert").c_str(), GetAssetPath("shaders/axis.geom").c_str(), GetAssetPath("shaders/axis.frag").c_str() };
+	VAO blackholeVAO;
+	VAO trailVAO;
+	VAO axisVAO;
+	VBO blackholeVBO{ GL_DYNAMIC_DRAW };
 
-	GLfloat lastTime = 0.0f;
-
-	
-	
-
+	struct ObjectsAttributeData {
+		int capacity{};
+		std::vector<ObjectAttributes> attributes;
+	} objectAttribs;
+	void UpdateObjectsAttributeData();
 	void SetUniforms();
 };
-#endif

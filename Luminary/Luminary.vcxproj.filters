@@ -33,10 +33,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Luminary\AxisPoint.h">
-      <Filter>src\Luminary</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Luminary\BlackholePoint.h">
+    <ClInclude Include="src\Luminary\Renderer\Structs\ObjectAttributes.h">
       <Filter>src\Luminary</Filter>
     </ClInclude>
     <ClInclude Include="src\Luminary\Core\AssetPath.h">
@@ -96,10 +93,7 @@
     <ClInclude Include="src\Luminary\Simulation.h">
       <Filter>src\Luminary</Filter>
     </ClInclude>
-    <ClInclude Include="src\Luminary\StarPoint.h">
-      <Filter>src\Luminary</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Luminary\TrailPoint.h">
+    <ClInclude Include="src\Luminary\Renderer\Structs\StarAttributes.h">
       <Filter>src\Luminary</Filter>
     </ClInclude>
     <ClInclude Include="src\Platform\OpenGL\imgui_impl_glfw.h">
@@ -117,6 +111,7 @@
     <ClInclude Include="vendor\stb_image\stb_image_write.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
+    <ClInclude Include="src\Luminary\AppStateType.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Luminary\Core\Camera.cpp">

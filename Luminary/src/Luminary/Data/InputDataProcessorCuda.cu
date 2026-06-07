@@ -342,3 +342,119 @@ void CleanupChunkDataCuda()
         gDInputPositionsCapacity = 0;
     }
 }
+
+
+
+__global__ void CopyCurrentFrameToTrailKernel(
+    const float4* positionFrames,
+    float4* trailHistory,
+    int objectCount,
+    int localRenderFrame,
+    int trailWriteFrame
+) {
+    int objectID = blockIdx.x * blockDim.x + threadIdx.x;
+    if (objectID >= objectCount) return;
+
+    int src = localRenderFrame * objectCount + objectID;
+    int dst = trailWriteFrame * objectCount + objectID;
+
+    trailHistory[dst] = positionFrames[src];
+}
+
+bool CopyCurrentFrameToTrailCuda(
+    cudaGraphicsResource* cudaPositionSSBO,
+    cudaGraphicsResource* cudaTrailSSBO,
+    int objectCount,
+    int localRenderFrame,
+    int trailWriteFrame
+) {
+    if (!cudaPositionSSBO || !cudaTrailSSBO) return false;
+    if (objectCount <= 0) return false;
+    if (localRenderFrame < 0) return false;
+    if (trailWriteFrame < 0) return false;
+
+    cudaError_t err;
+
+    err = cudaGraphicsMapResources(1, &cudaPositionSSBO, 0);
+    if (err != cudaSuccess) {
+        std::cerr << "CUDA Error: map position SSBO: "
+            << cudaGetErrorString(err) << std::endl;
+        return false;
+    }
+
+    err = cudaGraphicsMapResources(1, &cudaTrailSSBO, 0);
+    if (err != cudaSuccess) {
+        std::cerr << "CUDA Error: map trail SSBO: "
+            << cudaGetErrorString(err) << std::endl;
+        cudaGraphicsUnmapResources(1, &cudaPositionSSBO, 0);
+        return false;
+    }
+
+    size_t positionSize = 0;
+    size_t trailSize = 0;
+
+    float4* positionPtr = nullptr;
+    float4* trailPtr = nullptr;
+
+    err = cudaGraphicsResourceGetMappedPointer(
+        reinterpret_cast<void**>(&positionPtr),
+        &positionSize,
+        cudaPositionSSBO
+    );
+
+    if (err != cudaSuccess) {
+        std::cerr << "CUDA Error: get mapped position pointer: "
+            << cudaGetErrorString(err) << std::endl;
+        cudaGraphicsUnmapResources(1, &cudaTrailSSBO, 0);
+        cudaGraphicsUnmapResources(1, &cudaPositionSSBO, 0);
+        return false;
+    }
+
+    err = cudaGraphicsResourceGetMappedPointer(
+        reinterpret_cast<void**>(&trailPtr),
+        &trailSize,
+        cudaTrailSSBO
+    );
+
+    if (err != cudaSuccess) {
+        std::cerr << "CUDA Error: get mapped trail pointer: "
+            << cudaGetErrorString(err) << std::endl;
+        cudaGraphicsUnmapResources(1, &cudaTrailSSBO, 0);
+        cudaGraphicsUnmapResources(1, &cudaPositionSSBO, 0);
+        return false;
+    }
+
+    const int threads = 256;
+    const int blocks = (objectCount + threads - 1) / threads;
+
+    CopyCurrentFrameToTrailKernel << <blocks, threads >> > (
+        positionPtr,
+        trailPtr,
+        objectCount,
+        localRenderFrame,
+        trailWriteFrame
+        );
+
+    err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        std::cerr << "CUDA Error: CopyCurrentFrameToTrailKernel launch: "
+            << cudaGetErrorString(err) << std::endl;
+        cudaGraphicsUnmapResources(1, &cudaTrailSSBO, 0);
+        cudaGraphicsUnmapResources(1, &cudaPositionSSBO, 0);
+        return false;
+    }
+
+    err = cudaDeviceSynchronize();
+    if (err != cudaSuccess) {
+        std::cerr << "CUDA Error: CopyCurrentFrameToTrailKernel sync: "
+            << cudaGetErrorString(err) << std::endl;
+        cudaGraphicsUnmapResources(1, &cudaTrailSSBO, 0);
+        cudaGraphicsUnmapResources(1, &cudaPositionSSBO, 0);
+        return false;
+    }
+
+    cudaGraphicsUnmapResources(1, &cudaTrailSSBO, 0);
+    cudaGraphicsUnmapResources(1, &cudaPositionSSBO, 0);
+
+    return true;
+}

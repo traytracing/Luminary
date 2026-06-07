@@ -1,8 +1,8 @@
-#ifndef INPUT_MANAGER_CLASS_H
-#define INPUT_MANAGER_CLASS_H
+#pragma once
 
 #include <vector>
 
+#include "Luminary/Settings.h"
 #include "Core/Camera.h"
 
 class InputManager {
@@ -15,17 +15,18 @@ public:
 
 public:
     ~InputManager();
-    InputManager(Camera& POVCamera, Camera& SkyCamera);
+    InputManager(Settings& settings, GLFWwindow* window);
 
     void Update(GLFWwindow* window);
 
     static void window_size_callback(GLFWwindow* window, int width, int height);
     static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-
+    static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+public:
+    void LinkCameras(std::vector<Camera*> cameras);
 private:
-    Camera& POVCamera; 
-    Camera& SkyCamera;
+    Settings& settings;
+    GLFWwindow* window;
 
-    void UpdateCameras(GLFWwindow* window);
+    std::vector<std::function<void()>> updateFunctions;
 };
-#endif

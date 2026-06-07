@@ -159,8 +159,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\Luminary\AxisPoint.h" />
-    <ClInclude Include="src\Luminary\BlackholePoint.h" />
+    <ClInclude Include="src\Luminary\Renderer\Structs\ObjectAttributes.h" />
     <ClInclude Include="src\Luminary\Core\AssetPath.h" />
     <ClInclude Include="src\Luminary\Core\Camera.h" />
     <ClInclude Include="src\Luminary\Core\ComputeProgram.h" />
@@ -173,6 +172,7 @@
     <ClInclude Include="src\Luminary\Core\VBO.h" />
     <ClInclude Include="src\Luminary\Data\InputDataProcessor.h" />
     <ClInclude Include="src\Luminary\Data\InputDataProcessorCuda.h" />
+    <ClInclude Include="src\Luminary\AppStateType.h" />
     <ClInclude Include="src\Luminary\InputManager.h" />
     <ClInclude Include="src\Luminary\RenderSystem.h" />
     <ClInclude Include="src\Luminary\Renderer\GridRenderer.h" />
@@ -180,8 +180,7 @@
     <ClInclude Include="src\Luminary\Renderer\SkyRenderer.h" />
     <ClInclude Include="src\Luminary\Settings.h" />
     <ClInclude Include="src\Luminary\Simulation.h" />
-    <ClInclude Include="src\Luminary\StarPoint.h" />
-    <ClInclude Include="src\Luminary\TrailPoint.h" />
+    <ClInclude Include="src\Luminary\Renderer\Structs\StarAttributes.h" />
     <ClInclude Include="src\Platform\OpenGL\imgui_impl_glfw.h" />
     <ClInclude Include="src\Platform\OpenGL\imgui_impl_opengl3.h" />
     <ClInclude Include="src\Platform\OpenGL\imgui_impl_opengl3_loader.h" />

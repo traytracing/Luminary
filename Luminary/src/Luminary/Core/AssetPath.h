@@ -1,7 +1,9 @@
 #pragma once
 
 #include <filesystem>
+#define NOMINMAX
 #include <windows.h>
+#include <algorithm>
 #include <string>
 
 inline std::filesystem::path GetExecutableDirectory()

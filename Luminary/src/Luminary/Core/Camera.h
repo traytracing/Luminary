@@ -9,40 +9,32 @@
 #include <glm/gtx/vector_angle.hpp>
 
 #include "RenderProgram.h"
+#include "Luminary/Settings.h"
 
 class Camera {
-public: 
-	Camera() = default;
-	~Camera() = default;
-
 	Camera(const Camera&) = default;
 	Camera& operator=(const Camera&) = default;
 	Camera(Camera&&) = default;
 	Camera& operator=(Camera&&) = default;
-
+public: 
+	~Camera() = default;
+	Camera(const Settings& SRF);
 public:
-	// move all of these into private after changing manager camera inputs
+	const Settings& SRF;
+
 	GLfloat speed = 0.1f;
 	GLfloat sensitivity = 100.0f;
-	GLboolean firstClick = true;
-	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+	glm::vec3 up{ 0.0f, 1.0f, 0.0f };
 
-	glm::vec3 position = glm::vec3(0.0f);
-	glm::vec3 orientation = glm::vec3(0.0f, 0.0f, -1.0f);
-	glm::mat4 cameraMatrix = glm::mat4(1.0f);
+	glm::vec3 position{};
+	glm::vec3 orientation{ 0.0f, 0.0f, -1.0f };
+	glm::mat4 cameraMatrix{};
 
-	glm::vec3 object = glm::vec3(0.0f);
-	glm::vec3 lookat = glm::vec3(0.0f);
-
-	bool cameraLock = false; // fix later
-
-
-	void UpdateMatrix(GLfloat FOVdeg, GLfloat nearPlane, GLfloat farPlane, GLfloat width, GLfloat height);
+	void UpdateMatrix(GLfloat FOVdeg, GLfloat nearPlane, GLfloat farPlane);
+	void Inputs(GLFWwindow* window);
 		
 	void UploadMatrix(RenderProgram& renderProgram, const char* uniform);
 	void UploadOrientation(RenderProgram& renderProgram, const char* uniform);
 	void UploadPosition(RenderProgram& renderProgram, const char* uniform);
 	void UploadInverseMatrix(RenderProgram& renderProgram, const char* uniform);
-
-	void Inputs(GLFWwindow* window); // fix later with input manager
 };

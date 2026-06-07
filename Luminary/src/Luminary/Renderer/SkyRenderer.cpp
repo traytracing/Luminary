@@ -13,15 +13,15 @@ SkyRenderer::SkyRenderer(unsigned int starCount, Camera& camera)
 
 	stars.reserve(starCount);
 	for (int i = 0; i < starCount; ++i) {
-		stars.emplace_back(StarPoint::random());
+		stars.emplace_back(StarAttrib::random());
 	}
-	starVBO.SetDataOnce(stars.data(), stars.size() * sizeof(StarPoint));
+	starVBO.SetDataOnce(stars.data(), stars.size() * sizeof(StarAttrib));
 
-	starVAO.LinkAttrib(starVBO, 0, 2, GL_FLOAT, sizeof(StarPoint), (void*) 0);
-	starVAO.LinkAttrib(starVBO, 1, 1, GL_FLOAT, sizeof(StarPoint), (void*) offsetof(StarPoint, rotation));
-	starVAO.LinkAttrib(starVBO, 2, 1, GL_FLOAT, sizeof(StarPoint), (void*) offsetof(StarPoint, size));
-	starVAO.LinkIAttrib(starVBO, 3, 1, GL_UNSIGNED_INT, sizeof(StarPoint), (void*) offsetof(StarPoint, starType));
-	starVAO.LinkIAttrib(starVBO, 4, 1, GL_UNSIGNED_INT, sizeof(StarPoint), (void*) offsetof(StarPoint, starIndex));
+	starVAO.LinkAttrib(starVBO, 0, 2, GL_FLOAT, sizeof(StarAttrib), (void*) 0);
+	starVAO.LinkAttrib(starVBO, 1, 1, GL_FLOAT, sizeof(StarAttrib), (void*) offsetof(StarAttrib, rotation));
+	starVAO.LinkAttrib(starVBO, 2, 1, GL_FLOAT, sizeof(StarAttrib), (void*) offsetof(StarAttrib, size));
+	starVAO.LinkIAttrib(starVBO, 3, 1, GL_UNSIGNED_INT, sizeof(StarAttrib), (void*) offsetof(StarAttrib, starType));
+	starVAO.LinkIAttrib(starVBO, 4, 1, GL_UNSIGNED_INT, sizeof(StarAttrib), (void*) offsetof(StarAttrib, starIndex));
 
 	starTypeCount = { 6, 16 };
 	starSamplers = {GLint (largeStarsTex.TextureIndex), GLint(smallStarsTex.TextureIndex) };

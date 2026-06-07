@@ -5,17 +5,16 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
-#include "Core/PIMath.h"
+#include "Luminary/Core/PIMath.h"
 
-
-struct StarPoint {
+struct StarAttrib {
 	glm::vec2 angle;
-	GLfloat rotation;
-	GLfloat size;
-	GLuint starType;
-	GLuint starIndex;
+	float rotation;
+	float size;
+	unsigned int starType;
+	unsigned int starIndex;
 
-	static StarPoint random() {
+	static StarAttrib random() {
         static std::mt19937 rng{std::random_device{}()};
 
         static std::uniform_real_distribution<float> rand(0.0f, 1.0f);

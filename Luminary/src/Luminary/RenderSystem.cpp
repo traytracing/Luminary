@@ -46,12 +46,19 @@ RenderSystem::RenderSystem() {
 	if (initialized) throw std::runtime_error("RenderSystem already initialized");
 	initialized = true;
 
-	glfwSetWindowSizeCallback(window, inputManager.window_size_callback);
-	glfwSetScrollCallback(window, inputManager.scroll_callback);
-	glfwSetWindowUserPointer(window, &inputManager);
+	Link();
 
 	inputDataProcessor.SetFile(GetAssetPath("inputdata/InputData").c_str()); // REMOVE LATER
-	inputDataProcessor.AddRenderProgram(nbodyRenderer.blackholeRenderProgram);
+	inputDataProcessor.AddRenderProgram(nbodyRenderer.objectRenderProgram);
+	inputDataProcessor.AddRenderProgram(nbodyRenderer.trailRenderProgram);
+	inputDataProcessor.AddRenderProgram(nbodyRenderer.axisRenderProgram);
+}
+
+void RenderSystem::Link() {
+	std::vector<Camera*> cameras;
+	cameras.push_back(&POVCamera);
+	cameras.push_back(&SkyCamera);
+	inputManager.LinkCameras(cameras);
 }
 
 void RenderSystem::Render() {
@@ -59,12 +66,6 @@ void RenderSystem::Render() {
 	nbodyRenderer.Render();
 	gridRenderer.Render();
 }
-
-
-extern int curView;
-extern glm::vec4 trailColor;
-int mult = 1;
-extern GLfloat realTime;
 
 #include "imgui.h"
 
@@ -115,9 +116,6 @@ void finish_ffmpeg_pipe(FILE* ffmpegPipe) {
 //TODO lock the resolution when rendering 
 void RenderSystem::Run() {
 	
-	// ETC LATER inputDataProcessor.AddRenderProgram(nbodyRenderer.blackholeRenderProgram);
-
-
 	
 	int width = 1920; int height = 1080;
 	//glfwSwapInterval(0);
@@ -147,7 +145,7 @@ void RenderSystem::Run() {
 		float fpsim = ImGui::GetIO().Framerate;
 		ImGui::Text("FPS: %.1f", fpsim);
 		//ImGui::Text("Seed: %d", randomNum);
-		ImGui::SliderInt("View: ", &curView, 0, 29);
+		ImGui::SliderInt("View: ", &settings.currentViewObject, 0, 29);
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 4));
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));      // background
@@ -159,14 +157,11 @@ void RenderSystem::Run() {
 		ImGui::PopStyleColor(3);
 		ImGui::PopStyleVar(2);
 		ImGui::ColorEdit4("Pick a color", (float*)&myColor);
-		trailColor = glm::vec4(myColor.x, myColor.y, myColor.z, myColor.w);
+		settings.trailColor = glm::vec4(myColor.x, myColor.y, myColor.z, myColor.w);
 		static char filePath[128] = "";
 		if (ImGui::InputText("File path", filePath, IM_ARRAYSIZE(filePath))) {
 		}
 		if (ImGui::Button("Load")) {
-		}
-		if (ImGui::Button("Reverse")) {
-			mult *= -1;
 		}
 		//ImGui::Checkbox("Show grid", &renderGrid);
 

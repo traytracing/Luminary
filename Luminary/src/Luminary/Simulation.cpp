@@ -60,7 +60,7 @@ void Simulation::MakeSim(const std::string& filename, const SimType& type) {
 }
 
 std::vector<std::pair<std::vector<glm::vec4>, GLfloat>> Simulation::MakeOriginalSim() {
-    const int totalSimTime = 30;
+    const int totalSimTime = 10;
     const int objectCount = 30;
     const GLfloat k = 10.0f;
 
@@ -102,10 +102,7 @@ std::vector<std::pair<std::vector<glm::vec4>, GLfloat>> Simulation::MakeOriginal
                 float relDist = glm::length(diff);
                 force += GLfloat(k / pow(relDist, 2)) * glm::normalize(diff);
                 float relVel = glm::length(sim.back().first[i].second - sim.back().first[j].second) / glm::length(force);
-                float candidate = relDist / relVel;
-                if (candidate < dtgeo) {
-                    dtgeo = candidate;
-                }
+                dtgeo = std::min(dtgeo, relDist / relVel);
             }
 
             glm::vec4 newVel = sim.back().first[i].second + force * deltaTime;

@@ -33,6 +33,11 @@ void InputDataProcessor::Reset() {
 		cudaSSBO = nullptr;
 	}
 
+	if (cudaTrailSSBO) {
+		cudaGraphicsUnregisterResource(cudaTrailSSBO);
+		cudaTrailSSBO = nullptr;
+	}
+
 	if (fs.is_open()) fs.close();
 	fs.clear();
 
@@ -151,6 +156,11 @@ bool InputDataProcessor::UpdatePositionData(int renderFrame) {
 
 	int localRenderFrame = lf.chunk.renderFrameIndex - lf.chunk.startRenderFrame;
 
+
+	if (!CopyCurrentFrameToTrail(renderFrame, localRenderFrame)) {
+		return false;
+	}
+
 	for (const auto& program : programs) {
 		program->Activate();
 		glUniform1i(
@@ -161,10 +171,109 @@ bool InputDataProcessor::UpdatePositionData(int renderFrame) {
 			glGetUniformLocation(program->ID, "ObjectCount"),
 			lf.objectCount
 		);
+
+
+		glUniform1i(
+			glGetUniformLocation(program->ID, "TrailFrameCount"),
+			trailFrameCount
+		);
+
+		glUniform1i(
+			glGetUniformLocation(program->ID, "TrailWriteFrame"),
+			trailWriteFrame
+		);
+
+		glUniform1i(
+			glGetUniformLocation(program->ID, "ValidTrailFrameCount"),
+			validTrailFrameCount
+		);
 	}
 
 	return true;
 }
+
+bool InputDataProcessor::EnsureTrailSSBO() {
+	if (lf.objectCount <= 0 || trailFrameCount <= 0) {
+		return false;
+	}
+
+	GLsizeiptr trailSize =
+		GLsizeiptr(trailFrameCount) *
+		GLsizeiptr(lf.objectCount) *
+		GLsizeiptr(sizeof(glm::vec4));
+
+	bool resized = trailHistorySSBO.Resize(trailSize);
+
+	if (resized && cudaTrailSSBO) {
+		cudaGraphicsUnregisterResource(cudaTrailSSBO);
+		cudaTrailSSBO = nullptr;
+	}
+
+	return RegisterTrailSSBOIfNeeded();
+}
+bool InputDataProcessor::RegisterTrailSSBOIfNeeded() {
+	if (cudaTrailSSBO) {
+		return true;
+	}
+
+	cudaError_t regErr = cudaGraphicsGLRegisterBuffer(
+		&cudaTrailSSBO,
+		trailHistorySSBO.GetID(),
+		cudaGraphicsRegisterFlagsWriteDiscard
+	);
+
+	if (regErr != cudaSuccess) {
+		std::cerr << "CUDA Error: cudaGraphicsGLRegisterBuffer trailHistorySSBO: "
+			<< cudaGetErrorString(regErr) << std::endl;
+		cudaTrailSSBO = nullptr;
+		return false;
+	}
+
+	return true;
+}
+void InputDataProcessor::ResetTrailHistory() {
+	trailWriteFrame = 0;
+	validTrailFrameCount = 0;
+}
+
+bool InputDataProcessor::CopyCurrentFrameToTrail(int renderFrame, int localRenderFrame) {
+	if (!EnsureTrailSSBO()) {
+		return false;
+	}
+
+	bool sequential = renderFrame == previousRenderFrame + 1;
+
+	if (!sequential) {
+		ResetTrailHistory();
+	}
+
+	trailWriteFrame = renderFrame % trailFrameCount;
+
+	if (trailWriteFrame < 0) {
+		trailWriteFrame += trailFrameCount;
+	}
+
+	bool copied = CopyCurrentFrameToTrailCuda(
+		cudaSSBO,
+		cudaTrailSSBO,
+		lf.objectCount,
+		localRenderFrame,
+		trailWriteFrame
+	);
+
+	if (!copied) {
+		return false;
+	}
+
+	previousRenderFrame = renderFrame;
+
+	if (validTrailFrameCount < trailFrameCount) {
+		validTrailFrameCount++;
+	}
+
+	return true;
+}
+
 //DRAW THIS
 /*
 bool InputDataProcessor::UpdatePositionData(int renderFrame) {
