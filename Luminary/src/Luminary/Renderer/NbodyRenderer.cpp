@@ -18,20 +18,18 @@ NbodyRenderer::NbodyRenderer(Camera& POVCamera, const Settings& SRF, InputDataPr
 }
 
 void NbodyRenderer::UpdateObjectsAttributeData() {
-	if (IDPR.GetObjectCount() <= objectAttribs.capacity) { return; }
+	if (IDPR.lf.objectCount <= objectAttribs.capacity) { return; }
 
 	static std::default_random_engine rng2(123);
 	static std::uniform_real_distribution<float> U2(0.0f, 1.0f);
 
-	int objectCount = IDPR.GetObjectCount();
-
-	for (int i = objectAttribs.capacity; i < objectCount; ++i) {
+	for (int i = objectAttribs.capacity; i < IDPR.lf.objectCount; ++i) {
 		float theta = TAU * U2(rng2);
 		float phi = acosf(1.0f - 2.0f * U2(rng2));
 		float rseed = 20000 * U2(rng2);
 		objectAttribs.attributes.emplace_back(glm::vec2(phi, theta), std::log((i + 1) * 50.0f), glm::vec2(0.2f), rseed);
 	}
-	objectAttribs.capacity = objectCount;
+	objectAttribs.capacity = IDPR.lf.objectCount;
 	blackholeVBO.SetData(objectAttribs.attributes.data(), objectAttribs.attributes.size() * sizeof(ObjectAttributes));
 }
 void NbodyRenderer::SetUniforms() {
@@ -42,34 +40,29 @@ void NbodyRenderer::SetUniforms() {
 	
 	trailRenderProgram.Activate();
 	POVCamera.UploadMatrix(trailRenderProgram, "CameraMatrix");
-	glUniform1i(glGetUniformLocation(trailRenderProgram.ID, "ObjectCount"), IDPR.lf.objectCount);
-	glUniform1i(glGetUniformLocation(trailRenderProgram.ID, "TrailFrameCount"), IDPR.trailFrameCount);
-	glUniform1i(glGetUniformLocation(trailRenderProgram.ID, "TrailWriteFrame"), IDPR.trailWriteFrame);
-	glUniform1i(glGetUniformLocation(trailRenderProgram.ID, "ValidTrailFrameCount"), IDPR.validTrailFrameCount);
 	glUniform4f(glGetUniformLocation(trailRenderProgram.ID, "TrailColor"), SRF.trailColor.x, SRF.trailColor.y, SRF.trailColor.z, SRF.trailColor.w);
 
 	POVCamera.UploadMatrix(axisRenderProgram, "CameraMatrix");
 	glUniform1f(glGetUniformLocation(axisRenderProgram.ID, "Scale"), 0.35f);
 }
 void NbodyRenderer::Render() {
-	// object
 	UpdateObjectsAttributeData();
-
 	SetUniforms();
 
+	// objects
 	objectRenderProgram.Activate();
-	IDPR.GetSSBORef().BindBase(0);
+	IDPR.positionSSBOC.BindBase(0);
 	blackholeVAO.Bind();
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
 	glDisable(GL_BLEND);
-	glDrawArrays(GL_POINTS, 0, IDPR.GetObjectCount());
+	glDrawArrays(GL_POINTS, 0, IDPR.lf.objectCount);
 	
 	// sky
 	if (IDPR.validTrailFrameCount >= 2 && IDPR.lf.objectCount > 0) {
 		trailRenderProgram.Activate();
-		IDPR.trailHistorySSBO.BindBase(1);
+		IDPR.trailSSBOC.BindBase(1);
 		
 		glEnable(GL_DEPTH_TEST); glDepthMask(GL_FALSE);
 		glEnable(GL_BLEND);
@@ -90,5 +83,5 @@ void NbodyRenderer::Render() {
 
 	axisRenderProgram.Activate();
 	axisVAO.Bind();
-	glDrawArrays(GL_POINTS, 0, IDPR.GetObjectCount());
+	glDrawArrays(GL_POINTS, 0, IDPR.lf.objectCount);
 }

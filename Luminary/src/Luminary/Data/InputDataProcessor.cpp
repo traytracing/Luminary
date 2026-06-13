@@ -8,45 +8,32 @@
 #include <Luminary/Core/AssetPath.h>
 
 
-InputDataProcessor::InputDataProcessor(const Settings& SRF) : SRF(SRF)
-{
+namespace {
+	int trailWriteFrame{ 0 };
+	int previousRenderFrame{ -1 };
 }
-InputDataProcessor::~InputDataProcessor()
-{
+
+InputDataProcessor::~InputDataProcessor() {
 	Reset();
 }
+InputDataProcessor::InputDataProcessor(const Settings& SRF) : SRF(SRF) {
+}
 
 
 
-void InputDataProcessor::SetChunkConfig(int newMaxDataChunkByteSize)
-{
+void InputDataProcessor::SetChunkMaxData(int newMaxDataChunkByteSize) {
 	lf.MaxDataChunkByteSize = newMaxDataChunkByteSize;
 }
-void InputDataProcessor::SetFile(std::string file)
-{
-	Reset();
-	lf.filepath = GetAssetPath("inputdata/" + file + ".lumen").c_str();
-	processorState = UnpackFile() ? ProcessorState::FileLoaded : ProcessorState::InvalidFileLoaded;
-}
-void InputDataProcessor::Cleanup() {
-	if (cudaSSBO) {
-		cudaGraphicsUnregisterResource(cudaSSBO);
-		cudaSSBO = nullptr;
-	}
 
-	if (cudaTrailSSBO) {
-		cudaGraphicsUnregisterResource(cudaTrailSSBO);
-		cudaTrailSSBO = nullptr;
-	}
+void InputDataProcessor::Reset() {
+	positionSSBOC.Reset();
+	trailSSBOC.Reset();
 
 	if (fs.is_open()) {
 		fs.close();
 	}
 
 	fs.clear();
-}
-void InputDataProcessor::Reset() {
-	Cleanup();
 
 	lf = LumenFile{};
 	processorState = ProcessorState::NoFileLoaded;
@@ -58,14 +45,16 @@ void InputDataProcessor::Reset() {
 bool InputDataProcessor::InvalidFile() {
 	Reset();
 	processorState = ProcessorState::InvalidFileLoaded;
-	std::cerr << "Input Data Error: " << lf.filepath << std::endl;
+	std::cerr << "Input Data Error: " << lf.filepath.c_str() << std::endl;
 	return false;
 }
-
+void InputDataProcessor::SetFile(std::string file) {
+	Reset();
+	lf.filepath = GetAssetPath("inputdata/" + file + ".lumen").c_str();
+	processorState = UnpackFile() ? ProcessorState::FileLoaded : ProcessorState::InvalidFileLoaded;
+}
 bool InputDataProcessor::UnpackFile() {
 	if (std::filesystem::path(lf.filepath).extension() != ".lumen") return InvalidFile();
-
-	lf.chunk.fps = SRF.fps;
 
 	fs.open(lf.filepath, std::ios::in | std::ios::binary);
 	if (!fs) return InvalidFile();
@@ -76,7 +65,8 @@ bool InputDataProcessor::UnpackFile() {
 	lf.times.resize(lf.dataFrameCount);
 	fs.read(reinterpret_cast<char*>(lf.times.data()), lf.dataFrameCount * sizeof(float)); if (lf.times.size() <= 0) return InvalidFile();
 
-	if (!UpdatePositionData(0)) return InvalidFile();
+	if (!UpdateData(0)) return InvalidFile();
+
 	processorState = ProcessorState::FileLoaded;
 	return true;
 }
@@ -85,7 +75,7 @@ bool InputDataProcessor::UnpackFile() {
 bool InputDataProcessor::UpdateDataChunk(int renderFrame, bool& chunkReloaded) {
 	chunkReloaded = false;
 
-	if (lf.IsRenderFrameInsideChunk(renderFrame) && lf.chunk.fps == SRF.fps) {
+	if (lf.chunk.fps == SRF.fps && lf.IsRenderFrameInsideChunk(renderFrame)) {
 		lf.chunk.renderFrameIndex = renderFrame;
 		return true;
 	}
@@ -97,10 +87,7 @@ bool InputDataProcessor::UpdateDataChunk(int renderFrame, bool& chunkReloaded) {
 	chunkReloaded = true;
 	std::cout << "LOADING CHUNK AT RENDERFRAME: " << renderFrame << std::endl;
 
-	uint64_t jumpToPos =
-		uint64_t(2 * sizeof(int)) +
-		uint64_t(lf.dataFrameCount) * sizeof(float) +
-		uint64_t(lf.chunk.startDataFrame) * uint64_t(lf.objectCount) * sizeof(glm::vec4);
+	uint64_t jumpToPos = uint64_t(2 * sizeof(int)) + uint64_t(lf.dataFrameCount) * sizeof(float) + uint64_t(lf.chunk.startDataFrame) * uint64_t(lf.objectCount) * sizeof(glm::vec4);
 	fs.clear();
 	fs.seekg(static_cast<std::streampos>(jumpToPos), std::ios::beg);
 	lf.chunk.positions.resize((lf.chunk.endDataFrame - lf.chunk.startDataFrame) * lf.objectCount);
@@ -108,168 +95,30 @@ bool InputDataProcessor::UpdateDataChunk(int renderFrame, bool& chunkReloaded) {
 
 	return true;
 }
-
-
-bool InputDataProcessor::UpdatePositionData(int renderFrame) {
-	if (!lf.IsTimeValidRenderFrame(renderFrame)) {
-		return false;
-	}
-
-	bool chunkReloaded = false;
-	if (!UpdateDataChunk(renderFrame, chunkReloaded)) {
-		return false;
-	}
-
-
-	// GPU
-	int dataFrameCountInChunk = lf.chunk.endDataFrame - lf.chunk.startDataFrame;
+void InputDataProcessor::UpdatePositionSSBOC() {
 	int renderFrameCountInChunk = lf.chunk.endRenderFrame - lf.chunk.startRenderFrame;
-	if (dataFrameCountInChunk <= 0 || renderFrameCountInChunk <= 0) return false;
+	GLsizeiptr ssboSize = GLsizeiptr(renderFrameCountInChunk * lf.objectCount * sizeof(glm::vec4));
+	positionSSBOC.Resize(ssboSize);
+	UpdateChunkDataCuda(positionSSBOC.cudassbo, lf.makeDataChunkCuda());
 
-	GLsizeiptr ssboSize =
-		GLsizeiptr(renderFrameCountInChunk) *
-		GLsizeiptr(lf.objectCount) *
-		GLsizeiptr(sizeof(glm::vec4));
-
-	bool resized = positionSSBO.Resize(ssboSize);
-
-	bool needsCudaUpdate = chunkReloaded || resized || !cudaSSBO;
-
-
-	if (resized || !cudaSSBO) {
-		if (cudaSSBO) {
-			cudaGraphicsUnregisterResource(cudaSSBO);
-			cudaSSBO = nullptr;
-		}
-
-		cudaError_t regErr = cudaGraphicsGLRegisterBuffer(
-			&cudaSSBO,
-			positionSSBO.GetID(),
-			cudaGraphicsRegisterFlagsWriteDiscard
-		);
-
-		if (regErr != cudaSuccess) {
-			std::cerr << "CUDA Error: cudaGraphicsGLRegisterBuffer : "
-				<< cudaGetErrorString(regErr) << std::endl;
-			cudaSSBO = nullptr;
-			return false;
-		}
-	}
-
-	if (needsCudaUpdate) {
-		DataChunkCuda cudaChunk{};
-
-		cudaChunk.objectCount = lf.objectCount;
-		cudaChunk.dataFrameCount = dataFrameCountInChunk;
-
-		cudaChunk.times = lf.times.data() + lf.chunk.startDataFrame;
-		cudaChunk.positions = reinterpret_cast<const float4*>(lf.chunk.positions.data());
-
-		cudaChunk.fps = lf.chunk.fps;
-
-		cudaChunk.startRenderFrame = lf.chunk.startRenderFrame;
-		cudaChunk.renderFrameCount = renderFrameCountInChunk;
-
-		cudaChunk.startRenderTime =
-			lf.times.front() +
-			float(lf.chunk.startRenderFrame) / float(lf.chunk.fps);
-
-		UpdateChunkDataCuda(cudaSSBO, cudaChunk);
-	}
-
-
-	int localRenderFrame = lf.chunk.renderFrameIndex - lf.chunk.startRenderFrame;
-
-
-	if (!CopyCurrentFrameToTrail(renderFrame, localRenderFrame)) {
-		return false;
-	}
 
 	for (const auto& program : programs) {
 		program->Activate();
-		glUniform1i(
-			glGetUniformLocation(program->ID, "PositionFrameOffset"),
-			localRenderFrame
-		);
-		glUniform1i(
-			glGetUniformLocation(program->ID, "ObjectCount"),
-			lf.objectCount
-		);
-
-
-		glUniform1i(
-			glGetUniformLocation(program->ID, "TrailFrameCount"),
-			trailFrameCount
-		);
-
-		glUniform1i(
-			glGetUniformLocation(program->ID, "TrailWriteFrame"),
-			trailWriteFrame
-		);
-
-		glUniform1i(
-			glGetUniformLocation(program->ID, "ValidTrailFrameCount"),
-			validTrailFrameCount
-		);
+		glUniform1i(glGetUniformLocation(program->ID, "ObjectCount"), lf.objectCount);
 	}
-
-	return true;
 }
+void InputDataProcessor::UpdateTrailSSBOC(int renderFrame) {
+	int trailFrameCount = SRF.trailTime * lf.chunk.fps;
+	int localRenderFrame = lf.chunk.renderFrameIndex - lf.chunk.startRenderFrame;
 
-bool InputDataProcessor::EnsureTrailSSBO() {
-	if (lf.objectCount <= 0 || trailFrameCount <= 0) {
-		return false;
-	}
-
-	GLsizeiptr trailSize =
-		GLsizeiptr(trailFrameCount) *
-		GLsizeiptr(lf.objectCount) *
-		GLsizeiptr(sizeof(glm::vec4));
-
-	bool resized = trailHistorySSBO.Resize(trailSize);
-
-	if (resized && cudaTrailSSBO) {
-		cudaGraphicsUnregisterResource(cudaTrailSSBO);
-		cudaTrailSSBO = nullptr;
-	}
-
-	return RegisterTrailSSBOIfNeeded();
-}
-bool InputDataProcessor::RegisterTrailSSBOIfNeeded() {
-	if (cudaTrailSSBO) {
-		return true;
-	}
-
-	cudaError_t regErr = cudaGraphicsGLRegisterBuffer(
-		&cudaTrailSSBO,
-		trailHistorySSBO.GetID(),
-		cudaGraphicsRegisterFlagsWriteDiscard
-	);
-
-	if (regErr != cudaSuccess) {
-		std::cerr << "CUDA Error: cudaGraphicsGLRegisterBuffer trailHistorySSBO: "
-			<< cudaGetErrorString(regErr) << std::endl;
-		cudaTrailSSBO = nullptr;
-		return false;
-	}
-
-	return true;
-}
-void InputDataProcessor::ResetTrailHistory() {
-	trailWriteFrame = 0;
-	validTrailFrameCount = 0;
-}
-
-bool InputDataProcessor::CopyCurrentFrameToTrail(int renderFrame, int localRenderFrame) {
-	if (!EnsureTrailSSBO()) {
-		return false;
-	}
+	bool resized = trailSSBOC.Resize(trailFrameCount * lf.objectCount * sizeof(glm::vec4));
 
 	bool sequential = renderFrame == previousRenderFrame + 1;
-
 	if (!sequential) {
-		ResetTrailHistory();
+		trailWriteFrame = 0;
+		validTrailFrameCount = 0;
 	}
+
 
 	trailWriteFrame = renderFrame % trailFrameCount;
 
@@ -277,17 +126,8 @@ bool InputDataProcessor::CopyCurrentFrameToTrail(int renderFrame, int localRende
 		trailWriteFrame += trailFrameCount;
 	}
 
-	bool copied = CopyCurrentFrameToTrailCuda(
-		cudaSSBO,
-		cudaTrailSSBO,
-		lf.objectCount,
-		localRenderFrame,
-		trailWriteFrame
-	);
+	bool copied = CopyCurrentFrameToTrailCuda(positionSSBOC.cudassbo, trailSSBOC.cudassbo, lf.objectCount, localRenderFrame, trailWriteFrame);
 
-	if (!copied) {
-		return false;
-	}
 
 	previousRenderFrame = renderFrame;
 
@@ -295,11 +135,32 @@ bool InputDataProcessor::CopyCurrentFrameToTrail(int renderFrame, int localRende
 		validTrailFrameCount++;
 	}
 
+	for (const auto& program : programs) {
+		program->Activate();
+		glUniform1i(glGetUniformLocation(program->ID, "PositionFrameOffset"), localRenderFrame);
+		glUniform1i(glGetUniformLocation(program->ID, "TrailFrameCount"), trailFrameCount);
+		glUniform1i(glGetUniformLocation(program->ID, "TrailWriteFrame"), trailWriteFrame);
+		glUniform1i(glGetUniformLocation(program->ID, "ValidTrailFrameCount"), validTrailFrameCount);
+	}
+}
+bool InputDataProcessor::UpdateData(int renderFrame) {
+	if (lf.chunk.fps == SRF.fps && !lf.IsTimeValidRenderFrame(renderFrame)) return false;
+
+	// CPU data chunk
+	bool chunkReloaded = false;
+	if (!UpdateDataChunk(renderFrame, chunkReloaded)) return false;
+
+	// GPU ssbo data and uniforms
+	if (chunkReloaded) UpdatePositionSSBOC();
+	
+	UpdateTrailSSBOC(renderFrame);
+	
 	return true;
 }
 
+
+
 bool InputDataProcessor::AtLastRenderFrame() {
 	int maxRenderFrame = static_cast<int>((lf.times.back() - lf.times.front()) * lf.chunk.fps);
-
 	return lf.chunk.renderFrameIndex >= maxRenderFrame;
 }

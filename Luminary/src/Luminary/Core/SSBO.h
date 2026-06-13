@@ -1,10 +1,10 @@
-#ifndef SSBO_CLASS_H
-#define SSBO_CLASS_H
+#pragma once
 
 #include <glad/glad.h>
 
 class SSBO {
 public:
+	~SSBO();
 	SSBO();
 
 	GLuint GetID() { return ID; }
@@ -13,10 +13,8 @@ public:
 	void BindBase(GLuint index);
 	void Unbind();
 	void Delete();
-	bool Resize(GLsizeiptr size);
-
-private:
+	virtual bool Resize(GLsizeiptr size);
+protected:
 	GLuint ID;
 	GLsizeiptr Capacity = 0;
 };
-#endif

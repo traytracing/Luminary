@@ -1,12 +1,13 @@
 #include "SSBO.h"
 #include <iostream>
 
-// ALWAYS DYNAMIC
+SSBO::~SSBO() {
+	Delete();
+}
+
 SSBO::SSBO() {
 	glGenBuffers(1, &ID);
 }
-
-
 
 bool SSBO::SetData(void* data, GLsizeiptr size) {
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ID);
@@ -29,6 +30,7 @@ bool SSBO::SetData(void* data, GLsizeiptr size) {
 
 	if (!ptr) {
 		std::cerr << "Failed to map SSBO!" << std::endl;
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		return resized;
 	}
 

@@ -111,9 +111,9 @@
     <ClInclude Include="vendor\stb_image\stb_image_write.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="src\Luminary\AppStateType.h" />
     <ClInclude Include="src\Luminary\VideoManager.h" />
     <ClInclude Include="src\Luminary\Gui.h" />
+    <ClInclude Include="src\Luminary\Core\SSBOC.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Luminary\Core\Camera.cpp">
@@ -178,6 +178,7 @@
     </ClCompile>
     <ClCompile Include="src\Luminary\VideoManager.cpp" />
     <ClCompile Include="src\Luminary\Gui.cpp" />
+    <ClCompile Include="src\Luminary\Core\SSBOC.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="vendor\glm\glm">

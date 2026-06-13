@@ -101,7 +101,7 @@ void RenderSystem::LaunchMenuLoop() {
 }
 
 void RenderSystem::InSceneLoop() {
-	inputDataProcessor.UpdatePositionData(settings.renderFrame);
+	inputDataProcessor.UpdateData(settings.renderFrame);
 
 	glViewport(0, 0, settings.w_Dimensions.x, settings.w_Dimensions.y);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -117,7 +117,7 @@ void RenderSystem::InSceneLoop() {
 }
 
 void RenderSystem::RenderingLoop() {
-	inputDataProcessor.UpdatePositionData(settings.renderFrame);
+	inputDataProcessor.UpdateData(settings.renderFrame);
 
 	glViewport(0, 0, settings.w_Dimensions.x, settings.w_Dimensions.y);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);

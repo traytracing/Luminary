@@ -8,7 +8,7 @@
 #include <fstream>
 
 #include "Luminary/Core/RenderProgram.h"
-#include "Luminary/Core/SSBO.h"
+#include "Luminary/Core/SSBOC.h"
 #include "Luminary/Settings.h"
 #include "InputDataProcessorCuda.h"
 
@@ -89,54 +89,56 @@ struct LumenFile { // object count and frame count (and their vectors) are gaura
 		chunk.endDataFrame = end;
 		chunk.dataFrameIndex = firstDataFrame;
 
-		chunk.startRenderFrame =bufferStartRenderFrame;
+		chunk.startRenderFrame = bufferStartRenderFrame;
 		chunk.endRenderFrame = RenderFrameFromTime(times[chunk.endDataFrame - 1]) + 1;
 		chunk.renderFrameIndex = renderFrame;
+	}
+	DataChunkCuda makeDataChunkCuda() {
+		DataChunkCuda out;
+		out.objectCount = objectCount;
+		out.dataFrameCount = chunk.endDataFrame - chunk.startDataFrame;
+		out.renderFrameCount = chunk.endRenderFrame - chunk.startRenderFrame;
+
+		out.fps = chunk.fps;
+		out.startRenderTime = times.front() + float(chunk.startRenderFrame) / float(chunk.fps);
+
+		out.times = times.data() + chunk.startDataFrame;
+		out.positions = reinterpret_cast<const float4*>(chunk.positions.data());
+		return out;
 	}
 };
 
 class InputDataProcessor {
+	friend class RenderSystem;
+	friend class NbodyRenderer;
 public:
 	InputDataProcessor(const Settings& SRF);
 	~InputDataProcessor();
 
-	void SetChunkConfig(int newMaxDataChunkByteSize);
+	void SetChunkMaxData(int newMaxDataChunkByteSize);
 	void SetFile(std::string filepath);
 
-	bool UpdatePositionData(int renderFrame);
-
-	int GetObjectCount() { return lf.objectCount; }
-	SSBO& GetSSBORef() { return positionSSBO; }
-	SSBO& GetTrailSSBORef() { return trailHistorySSBO; }
-	void AddRenderProgram(RenderProgram& program) { programs.push_back(&program); }
-
+	bool UpdateData(int renderFrame);
 	bool AtLastRenderFrame();
-public:
-	void Cleanup();
+
+	void AddRenderProgram(RenderProgram& program) { programs.push_back(&program); }
+private:
 	void Reset();
 	bool InvalidFile();
 	bool UnpackFile();
 
 	bool UpdateDataChunk(int renderFrame, bool& chunkReloaded);
+	void UpdatePositionSSBOC();
+	void UpdateTrailSSBOC(int renderFrame);
 
-	bool EnsureTrailSSBO();
-	bool RegisterTrailSSBOIfNeeded();
-	bool CopyCurrentFrameToTrail(int renderFrame, int localRenderFrame);
-	void ResetTrailHistory();
+	int validTrailFrameCount{ 0 };
 
 	ProcessorState processorState{ ProcessorState::NoFileLoaded };
 	std::fstream fs{};
 	LumenFile lf{};
 
-	SSBO positionSSBO;
-	cudaGraphicsResource* cudaSSBO{ nullptr };
-	SSBO trailHistorySSBO;
-	cudaGraphicsResource* cudaTrailSSBO{ nullptr };
-
-	int trailFrameCount{ 240 };
-	int trailWriteFrame{ 0 };
-	int previousRenderFrame{ -1 };
-	int validTrailFrameCount{ 0 };
+	SSBOC positionSSBOC;
+	SSBOC trailSSBOC;
 
 	std::vector<RenderProgram*> programs;
 	const Settings& SRF;

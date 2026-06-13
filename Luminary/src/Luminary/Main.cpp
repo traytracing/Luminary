@@ -7,8 +7,8 @@
 int main() {
 	glfwInit();
 
-    Simulation sim;
-	sim.MakeSim("InputData", Simulation::SimType::Original);
+    //Simulation sim;
+	//sim.MakeSim("InputData", Simulation::SimType::Original);
 	
 	RenderSystem renderSystem;
 	renderSystem.Run();
