@@ -30,24 +30,19 @@ public:
 private:
     void DrawLaunchMenu();
 
-    void DrawMainControls();
-    void DrawSimulationPanel();
-    void DrawRenderPanel();
-    void DrawFilePanel();
+    void DrawScenePanel();
+    void DrawRenderingPanel();
+
+    void DrawSettings();
+    void DrawRender();
+    void DrawRendering();
 
 private:
     Settings& settings;
     GLFWwindow* window{ nullptr };
-
-    bool showControls{ true };
-    bool showSimulation{ true };
-    bool showRender{ true };
-
+    
+    //move these to settings
     char filePathBuffer[256]{};
-
-    ImVec4 trailColorGui{ 0.749f, 0.659f, 0.565f, 1.0f };
-
     int maxViewObject{ 29 };
-
     bool recording{ false };
 };

@@ -32,6 +32,7 @@ private:
 
 	void Loop();
 	void LaunchMenuLoop();
+	void InEmptySceneLoop();
 	void InSceneLoop();
 	void RenderingLoop();
 

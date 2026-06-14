@@ -7,9 +7,30 @@
 #include <Platform/OpenGL/imgui_impl_glfw.h>
 #include <Platform/OpenGL/imgui_impl_opengl3.h>
 
-Gui::Gui(Settings& SRF, GLFWwindow* window)
-    : settings(SRF), window(window)
-{
+namespace {
+    const ImGuiWindowFlags noMoveFlags =
+        ImGuiWindowFlags_NoTitleBar |
+        ImGuiWindowFlags_NoResize |
+        ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoCollapse |
+        ImGuiWindowFlags_NoBringToFrontOnFocus;
+
+    const char* title = "LUMINARY";
+    const char* subtitle = "synthesis engine";
+    const char* copyrightText = "Copyright symbol 2026 traytracing. All rights reserved.";
+    const float launchMenuWidth = 420.0f;
+    const float launchMenuHeight = 360.0f;
+
+    const ImVec2 mainPanelSize = ImVec2(420.0f, 640.0f);
+
+    ImGuiViewport* viewport = nullptr;
+}
+Gui::~Gui() {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+}
+Gui::Gui(Settings& SRF, GLFWwindow* window) : settings(SRF), window(window) {
     static bool initialized = false;
     if (initialized)
         throw std::runtime_error("Gui already initialized!");
@@ -25,19 +46,9 @@ Gui::Gui(Settings& SRF, GLFWwindow* window)
     ImGui::StyleColorsDark();
 
     ImGuiStyle& style = ImGui::GetStyle();
-    style.WindowRounding = 8.0f;
-    style.FrameRounding = 5.0f;
-    style.GrabRounding = 5.0f;
     style.WindowBorderSize = 1.0f;
     style.FramePadding = ImVec2(8.0f, 5.0f);
     style.ItemSpacing = ImVec2(8.0f, 8.0f);
-
-    trailColorGui = ImVec4(
-        settings.trailColor.r,
-        settings.trailColor.g,
-        settings.trailColor.b,
-        settings.trailColor.a
-    );
 
     const char* glsl_version = "#version 460";
 
@@ -45,267 +56,163 @@ Gui::Gui(Settings& SRF, GLFWwindow* window)
     ImGui_ImplOpenGL3_Init(glsl_version);
 }
 
-Gui::~Gui()
-{
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-}
-
-void Gui::Update()
-{
+void Gui::Update() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    if (settings.appState == AppStateType::LaunchMenu) {
+    viewport = ImGui::GetMainViewport();
+
+    switch (settings.appState) {
+    case AppStateType::LaunchMenu:
         DrawLaunchMenu();
-        return;
-    }
-
-    ImGuiViewport* viewport = ImGui::GetMainViewport();
-
-    ImGui::SetNextWindowPos(
-        ImVec2(viewport->WorkPos.x + 16.0f, viewport->WorkPos.y + 16.0f),
-        ImGuiCond_FirstUseEver
-    );
-
-    ImGui::SetNextWindowSize(
-        ImVec2(360.0f, 520.0f),
-        ImGuiCond_FirstUseEver
-    );
-
-    if (showControls) {
-        DrawMainControls();
-    }
-
-    if (showSimulation) {
-        DrawSimulationPanel();
-    }
-
-    if (showRender) {
-        DrawRenderPanel();
+        break;
+    case AppStateType::InEmptyScene:
+    case AppStateType::InScene:
+        DrawScenePanel();
+        break;
+    case AppStateType::Rendering:
+        DrawRenderingPanel();
+        break;
     }
 }
-
-void Gui::Render()
-{
+void Gui::Render() {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void Gui::DrawLaunchMenu()
-{
-    ImGuiViewport* viewport = ImGui::GetMainViewport();
 
+
+
+void Gui::DrawLaunchMenu() {
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
-
-    ImGuiWindowFlags flags =
-        ImGuiWindowFlags_NoTitleBar |
-        ImGuiWindowFlags_NoResize |
-        ImGuiWindowFlags_NoMove |
-        ImGuiWindowFlags_NoCollapse |
-        ImGuiWindowFlags_NoBringToFrontOnFocus;
-
-    ImGui::Begin("Luminary Launch Menu", nullptr, flags);
+    ImGui::Begin("Luminary", nullptr, noMoveFlags);
 
     const ImVec2 windowSize = ImGui::GetWindowSize();
-
-    const float menuWidth = 420.0f;
-    const float menuHeight = 360.0f;
-
-    ImGui::SetCursorPos(ImVec2(
-        (windowSize.x - menuWidth) * 0.5f,
-        (windowSize.y - menuHeight) * 0.5f
-    ));
-
-    ImGui::BeginChild(
-        "LaunchMenuContent",
-        ImVec2(menuWidth, menuHeight),
-        true,
-        ImGuiWindowFlags_NoScrollbar
-    );
+    ImGui::SetCursorPos(ImVec2((windowSize.x - launchMenuWidth) * 0.5f, (windowSize.y - launchMenuHeight) * 0.5f));
+    ImGui::BeginChild("LaunchMenuContent", ImVec2(launchMenuWidth, launchMenuHeight), true, ImGuiWindowFlags_NoScrollbar);
 
     ImGui::Spacing();
     ImGui::Spacing();
 
-    const char* title = "LUMINARY";
-    const char* subtitle = "Orbital Simulation Renderer";
-
+    // remove later
     float titleWidth = ImGui::CalcTextSize(title).x;
     float subtitleWidth = ImGui::CalcTextSize(subtitle).x;
 
-    ImGui::SetCursorPosX((menuWidth - titleWidth) * 0.5f);
+    ImGui::SetCursorPosX((launchMenuWidth - titleWidth) * 0.5f);
     ImGui::Text("%s", title);
-
-    ImGui::SetCursorPosX((menuWidth - subtitleWidth) * 0.5f);
+    ImGui::SetCursorPosX((launchMenuWidth - subtitleWidth) * 0.5f);
     ImGui::TextDisabled("%s", subtitle);
 
     ImGui::Spacing();
-    ImGui::Separator();
     ImGui::Spacing();
-
     ImGui::SetNextItemWidth(-1.0f);
-    ImGui::InputTextWithHint(
-        "##LaunchFilePath",
-        "example: data/my_file",
-        filePathBuffer,
-        IM_ARRAYSIZE(filePathBuffer)
-    );
-
-    if (ImGui::Button("Load File", ImVec2(-1.0f, 42.0f))) {
-        if (OnLoadFile) {
-            OnLoadFile(std::string(filePathBuffer));
-        }
-    }
+    ImGui::Text("Source code is available @ github.com/traytracing/Luminary");
+    ImGui::Text("for educational purposes only; commerical rights reserved.");
+    ImGui::Text("Contact traytracing if you want a specific feature added.");
 
     ImGui::Spacing();
+    ImGui::Text("Note: Don't include .lumen when loading a Lumen file.");
 
-    if (ImGui::Button("Enter Scene", ImVec2(-1.0f, 42.0f))) {
-        settings.appState = AppStateType::InScene;
-    }
+    ImGui::Spacing();
+    ImGui::Spacing();
+    if (ImGui::Button("Enter Scene", ImVec2(-1.0f, 42.0f)))
+        settings.appState = AppStateType::InEmptyScene;
 
-    if (ImGui::Button("Start Rendering Mode", ImVec2(-1.0f, 42.0f))) {
-        settings.appState = AppStateType::Rendering;
-    }
-
+    ImGui::Spacing();
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
-
-    if (ImGui::Button("Quit", ImVec2(-1.0f, 36.0f))) {
-        if (window) {
-            glfwSetWindowShouldClose(window, GLFW_TRUE);
-        }
-    }
+    if (ImGui::Button("Quit", ImVec2(-1.0f, 36.0f)))
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
 
     ImGui::Spacing();
-
-    ImGui::TextDisabled("Tip: load a .lumen scene, then enter the simulation.");
+    ImGui::SetWindowFontScale(0.75f);
+    ImGui::Text(copyrightText);
+    ImGui::SetWindowFontScale(1.0f);
 
     ImGui::EndChild();
+    ImGui::End();
+}
+void Gui::DrawScenePanel() {
+    ImGui::SetNextWindowPos(viewport->WorkPos);
+    ImGui::SetNextWindowSize(mainPanelSize);
+    ImGui::Begin("Scene Panel", 0, noMoveFlags);
+
+    DrawSettings();
+    DrawRender();
+    
+    ImGui::End();
+}
+void Gui::DrawRenderingPanel() {
+    ImGui::SetNextWindowPos(viewport->WorkPos);
+    ImGui::SetNextWindowSize(mainPanelSize);
+    ImGui::Begin("Render Panel", 0, noMoveFlags);
+
+    DrawRendering();
 
     ImGui::End();
 }
 
-void Gui::DrawMainControls()
-{
-    ImGui::Begin("Luminary Controls", &showControls, ImGuiWindowFlags_NoCollapse);
-
-    const float fps = ImGui::GetIO().Framerate;
-    const float frameMs = fps > 0.0f ? 1000.0f / fps : 0.0f;
-
-    ImGui::Text("Performance");
+void Gui::DrawSettings() {
+    ImGui::Text("Settings");
     ImGui::Separator();
 
+    if (ImGui::Checkbox("VSync", &settings.vsync))
+        glfwSwapInterval(settings.vsync ? 1 : 0);
+    ImGui::SameLine();
+    const float fps = ImGui::GetIO().Framerate;
     ImGui::Text("FPS: %.1f", fps);
-    ImGui::Text("Frame time: %.2f ms", frameMs);
 
     ImGui::Spacing();
+    ImGui::SetNextItemWidth(-1.0f);
+    ImGui::InputTextWithHint("##FilePath", "File name (ex. InputData)", filePathBuffer, IM_ARRAYSIZE(filePathBuffer));
+    if (ImGui::Button("Load File", ImVec2(-1.0f, 0.0f)))
+        OnLoadFile(std::string(filePathBuffer));
 
-    if (ImGui::CollapsingHeader("View", ImGuiTreeNodeFlags_DefaultOpen)) {
-        settings.currentViewObject = std::clamp(settings.currentViewObject, 0, maxViewObject);
+    ImGui::Spacing();
+    ImGui::ColorEdit4("Trail Color", reinterpret_cast<float*>(&settings.trailColor));
+}
+void Gui::DrawRender() {
+    ImGui::Spacing();
+    ImGui::Text("Render");
+    ImGui::Separator();
 
-        ImGui::SetNextItemWidth(-1.0f);
-        ImGui::SliderInt("Object", &settings.currentViewObject, 0, maxViewObject);
+    ImGui::InputInt("RenderingFPS ##input", &settings.fps);
+    settings.fps = std::clamp(settings.fps, 10, 200);
 
-        ImGui::SameLine();
+    ImGui::Checkbox("Camera Lock", &settings.cameraRenderLock);
 
-        if (ImGui::Button("Reset View")) {
-            settings.currentViewObject = 0;
-        }
-    }
+    ImGui::SliderInt("Object Source (from)", &settings.objectSource, 0, maxViewObject);
+    settings.objectSource = std::clamp(settings.objectSource, -1, maxViewObject);
+    ImGui::SliderInt("Object Target (to)", &settings.objectTarget, 0, maxViewObject);
+    settings.objectTarget = std::clamp(settings.objectTarget, -1, maxViewObject);
 
-    if (ImGui::CollapsingHeader("Trail", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::ColorEdit4("Trail Color", reinterpret_cast<float*>(&trailColorGui));
-
-        settings.trailColor = glm::vec4(
-            trailColorGui.x,
-            trailColorGui.y,
-            trailColorGui.z,
-            trailColorGui.w
-        );
-    }
-
-    if (ImGui::CollapsingHeader("Panels", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::Checkbox("Simulation Panel", &showSimulation);
-        ImGui::Checkbox("Render Panel", &showRender);
-    }
-
-    DrawFilePanel();
-
-    ImGui::End();
 }
 
-void Gui::DrawFilePanel()
-{
-    if (!ImGui::CollapsingHeader("File", ImGuiTreeNodeFlags_DefaultOpen)) {
-        return;
-    }
+
+void Gui::DrawRendering() {
+    ImGui::Spacing();
+    ImGui::Text("Rendering");
+    ImGui::Separator();
+
+    settings.objectSource = std::clamp(settings.objectSource, 0, maxViewObject);
 
     ImGui::SetNextItemWidth(-1.0f);
-    ImGui::InputTextWithHint(
-        "##FilePath",
-        "example: data/my_file",
-        filePathBuffer,
-        IM_ARRAYSIZE(filePathBuffer)
-    );
+    ImGui::SliderInt("Object", &settings.objectSource, 0, maxViewObject);
 
-    ImGui::Spacing();
+    ImGui::SameLine();
 
-    if (ImGui::Button("Load File", ImVec2(-1.0f, 0.0f))) {
-        if (OnLoadFile) {
-            OnLoadFile(std::string(filePathBuffer));
-        }
+    if (ImGui::Button("Reset View")) {
+        settings.objectSource = 0;
     }
 
-    ImGui::TextDisabled("Do not include .lumen unless your loader expects it.");
-}
-
-void Gui::DrawSimulationPanel()
-{
-    ImGuiViewport* viewport = ImGui::GetMainViewport();
-
-    ImGui::SetNextWindowPos(
-        ImVec2(viewport->WorkPos.x + viewport->WorkSize.x - 276.0f, viewport->WorkPos.y + 16.0f),
-        ImGuiCond_FirstUseEver
-    );
-
-    ImGui::SetNextWindowSize(ImVec2(260.0f, 160.0f), ImGuiCond_FirstUseEver);
-
-    ImGui::Begin("Simulation", &showSimulation, ImGuiWindowFlags_NoCollapse);
-
-    ImGui::Text("Current Object: %d", settings.currentViewObject);
-
+    ImGui::Checkbox("Camera Lock", &settings.cameraRenderLock);
     ImGui::Spacing();
-
-    ImGui::Text("Window: %d x %d",
-        settings.w_Dimensions.x,
-        settings.w_Dimensions.y
-    );
-
-    ImGui::Text("Target FPS: %d", settings.fps);
-
-    ImGui::End();
-}
-
-void Gui::DrawRenderPanel()
-{
-    ImGuiViewport* viewport = ImGui::GetMainViewport();
-
-    ImGui::SetNextWindowPos(
-        ImVec2(viewport->WorkPos.x + viewport->WorkSize.x - 276.0f, viewport->WorkPos.y + 192.0f),
-        ImGuiCond_FirstUseEver
-    );
-
-    ImGui::SetNextWindowSize(ImVec2(260.0f, 180.0f), ImGuiCond_FirstUseEver);
-
-    ImGui::Begin("Render", &showRender, ImGuiWindowFlags_NoCollapse);
-
-    ImGui::Checkbox("Render Lock", &settings.cameraRenderLock);
-
+    ImGui::Text("Current Object: %d", settings.objectSource);
     ImGui::Spacing();
+    ImGui::Text("Window: %d x %d", settings.w_Dimensions.x, settings.w_Dimensions.y);
 
     if (!recording) {
         if (ImGui::Button("Start Recording", ImVec2(-1.0f, 0.0f))) {
@@ -333,6 +240,4 @@ void Gui::DrawRenderPanel()
     }
 
     ImGui::Text("Recording: %s", recording ? "Yes" : "No");
-
-    ImGui::End();
 }

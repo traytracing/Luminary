@@ -43,18 +43,17 @@ void RenderSystem::Link() {
 	cameras.push_back(&SkyCamera);
 	inputManager.LinkCameras(cameras);
 
-	// REMOVE LATER    
+	// FIX 
 	gui.OnLoadFile = [&](const std::string& path) {
 		inputDataProcessor.SetFile(path);
-		};
-
+		settings.appState = inputDataProcessor.processorState == ProcessorState::FileLoaded ? AppStateType::InScene : AppStateType::InEmptyScene;
+	};
 	gui.OnStartRecording = [&]() {
 		videoManager.UpdateOutputFile("output");
-		};
-
+	};
 	gui.OnStopRecording = [&]() {
 		videoManager.End();
-		};
+	};
 	
 	inputDataProcessor.AddRenderProgram(nbodyRenderer.objectRenderProgram);
 	inputDataProcessor.AddRenderProgram(nbodyRenderer.trailRenderProgram);
@@ -78,6 +77,9 @@ void RenderSystem::Loop() {
 		case AppStateType::LaunchMenu:
 			LaunchMenuLoop();
 			break;
+		case AppStateType::InEmptyScene:
+			InEmptySceneLoop();
+			break;
 		case AppStateType::InScene:
 			InSceneLoop();
 			break;
@@ -96,6 +98,19 @@ void RenderSystem::LaunchMenuLoop() {
 	glClearColor(0.106f, 0.110f, 0.173f, 1.0f);
 	glDepthMask(GL_TRUE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	gui.Render();
+}
+
+void RenderSystem::InEmptySceneLoop() {
+	glViewport(0, 0, settings.w_Dimensions.x, settings.w_Dimensions.y);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClearColor(0.106f, 0.110f, 0.173f, 1.0f);
+	glDepthMask(GL_TRUE);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	skyRenderer.Render();
+	gridRenderer.Render();
 
 	gui.Render();
 }

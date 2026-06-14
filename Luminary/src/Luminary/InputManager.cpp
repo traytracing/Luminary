@@ -57,7 +57,7 @@ void InputManager::LinkCameras(std::vector<Camera*> cameras) {
 
 	Camera* povCamera = cameras[0];
 	auto a0 = [this, povCamera] {
-		if (settings.appState != AppStateType::InScene && settings.appState != AppStateType::Rendering)
+		if (settings.appState != AppStateType::InEmptyScene && settings.appState != AppStateType::InScene && settings.appState != AppStateType::Rendering)
 			return;
 		if (!settings.cameraRenderLock && !settings.cameraGUIClickLock)
 			povCamera->Inputs(window);
@@ -68,7 +68,7 @@ void InputManager::LinkCameras(std::vector<Camera*> cameras) {
 
 	Camera* skyCamera = cameras[1];
 	auto a1 = [this, povCamera, skyCamera] {
-		if (settings.appState != AppStateType::InScene && settings.appState != AppStateType::Rendering)
+		if (settings.appState != AppStateType::InEmptyScene && settings.appState != AppStateType::InScene && settings.appState != AppStateType::Rendering)
 			return;
 		if (!settings.cameraRenderLock && !settings.cameraGUIClickLock)
 			skyCamera->orientation = povCamera->orientation;
