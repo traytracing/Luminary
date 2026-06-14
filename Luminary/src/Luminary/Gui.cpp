@@ -1,9 +1,7 @@
 #include "Gui.h"
-
 #include <algorithm>
 #include <stdexcept>
 #include <string>
-
 #include <Platform/OpenGL/imgui_impl_glfw.h>
 #include <Platform/OpenGL/imgui_impl_opengl3.h>
 
@@ -15,6 +13,8 @@ namespace {
         ImGuiWindowFlags_NoCollapse |
         ImGuiWindowFlags_NoBringToFrontOnFocus;
 
+    ImGuiViewport* viewport = nullptr;
+
     const char* title = "LUMINARY";
     const char* subtitle = "synthesis engine";
     const char* copyrightText = "Copyright symbol 2026 traytracing. All rights reserved.";
@@ -23,7 +23,7 @@ namespace {
 
     const ImVec2 mainPanelSize = ImVec2(420.0f, 640.0f);
 
-    ImGuiViewport* viewport = nullptr;
+    char filePathBuffer[256]{};
 }
 Gui::~Gui() {
     ImGui_ImplOpenGL3_Shutdown();
@@ -65,7 +65,7 @@ void Gui::Update() {
 
     switch (settings.appState) {
     case AppStateType::LaunchMenu:
-        DrawLaunchMenu();
+        DrawLaunchMenuPanel();
         break;
     case AppStateType::InEmptyScene:
     case AppStateType::InScene:
@@ -84,11 +84,36 @@ void Gui::Render() {
 
 
 
-void Gui::DrawLaunchMenu() {
+void Gui::DrawLaunchMenuPanel() {
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
     ImGui::Begin("Luminary", nullptr, noMoveFlags);
 
+    DrawLaunchMenu();
+ 
+    ImGui::End();
+}
+void Gui::DrawScenePanel() {
+    ImGui::SetNextWindowPos(viewport->WorkPos);
+    ImGui::SetNextWindowSize(mainPanelSize);
+    ImGui::Begin("Scene Panel", 0, noMoveFlags);
+
+    DrawSettings();
+    DrawRender();
+    
+    ImGui::End();
+}
+void Gui::DrawRenderingPanel() {
+    ImGui::SetNextWindowPos(viewport->WorkPos);
+    ImGui::SetNextWindowSize(mainPanelSize);
+    ImGui::Begin("Render Panel", 0, noMoveFlags);
+
+    DrawRendering();
+
+    ImGui::End();
+}
+
+void Gui::DrawLaunchMenu() {
     const ImVec2 windowSize = ImGui::GetWindowSize();
     ImGui::SetCursorPos(ImVec2((windowSize.x - launchMenuWidth) * 0.5f, (windowSize.y - launchMenuHeight) * 0.5f));
     ImGui::BeginChild("LaunchMenuContent", ImVec2(launchMenuWidth, launchMenuHeight), true, ImGuiWindowFlags_NoScrollbar);
@@ -133,28 +158,7 @@ void Gui::DrawLaunchMenu() {
     ImGui::SetWindowFontScale(1.0f);
 
     ImGui::EndChild();
-    ImGui::End();
 }
-void Gui::DrawScenePanel() {
-    ImGui::SetNextWindowPos(viewport->WorkPos);
-    ImGui::SetNextWindowSize(mainPanelSize);
-    ImGui::Begin("Scene Panel", 0, noMoveFlags);
-
-    DrawSettings();
-    DrawRender();
-    
-    ImGui::End();
-}
-void Gui::DrawRenderingPanel() {
-    ImGui::SetNextWindowPos(viewport->WorkPos);
-    ImGui::SetNextWindowSize(mainPanelSize);
-    ImGui::Begin("Render Panel", 0, noMoveFlags);
-
-    DrawRendering();
-
-    ImGui::End();
-}
-
 void Gui::DrawSettings() {
     ImGui::Text("Settings");
     ImGui::Separator();
@@ -179,19 +183,22 @@ void Gui::DrawRender() {
     ImGui::Text("Render");
     ImGui::Separator();
 
-    ImGui::InputInt("RenderingFPS ##input", &settings.fps);
+    ImGui::InputInt("Render FPS ##input", &settings.fps);
     settings.fps = std::clamp(settings.fps, 10, 200);
 
     ImGui::Checkbox("Camera Lock", &settings.cameraRenderLock);
 
-    ImGui::SliderInt("Object Source (from)", &settings.objectSource, 0, maxViewObject);
+    ImGui::SliderInt("Object Source (from)", &settings.objectSource, -1, maxViewObject);
     settings.objectSource = std::clamp(settings.objectSource, -1, maxViewObject);
-    ImGui::SliderInt("Object Target (to)", &settings.objectTarget, 0, maxViewObject);
+    ImGui::SliderInt("Object Target (to)", &settings.objectTarget, -1, maxViewObject);
     settings.objectTarget = std::clamp(settings.objectTarget, -1, maxViewObject);
 
+    ImGui::Checkbox("Render Grid", &settings.renderGrid);
+    ImGui::Checkbox("Render Sky", &settings.renderSky);
+
+    if (ImGui::Button("Start Render"))
+        OnStartRender();
 }
-
-
 void Gui::DrawRendering() {
     ImGui::Spacing();
     ImGui::Text("Rendering");

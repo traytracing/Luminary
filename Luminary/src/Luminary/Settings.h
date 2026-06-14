@@ -2,9 +2,9 @@
 
 #include <glm/glm.hpp>
 
-constexpr glm::uvec2 InitialWindowDimensions{ 1920, 1080 };
-constexpr int Initialfps = 60;
-constexpr glm::vec4 InitialTrailColor{ 0.043f, 0.031f, 0.118f, 1.0f };
+static constexpr glm::uvec2 InitialWindowDimensions{ 1920, 1080 };
+static constexpr int Initialfps = 60;
+static constexpr glm::vec4 InitialTrailColor{ 0.749f, 0.659f, 0.565f, 1.0f };
 
 enum class AppStateType {
 	Boot,
@@ -44,4 +44,6 @@ struct Settings {
 	float trailTime = 2.0f;
 	float trailWidth = 5.0f;
 	float axisWidth = 2.3f;
+	bool renderGrid{ true };
+	bool renderSky{ true };
 };

@@ -36,7 +36,7 @@ void NbodyRenderer::SetUniforms() {
 	objectRenderProgram.Activate();
 	POVCamera.UploadMatrix(objectRenderProgram, "CameraMatrix");
 	POVCamera.UploadPosition(objectRenderProgram, "CameraPosition");
-	glUniform1f(glGetUniformLocation(objectRenderProgram.ID, "TIME"), IDPR.lf.chunk.renderFrameIndex / IDPR.lf.chunk.fps); // multply by timespeed in frag shader
+	glUniform1f(glGetUniformLocation(objectRenderProgram.ID, "TIME"), IDPR.lf.chunk.renderFrameIndex * IDPR.lf.chunk.fps * 0.01f);
 	
 	trailRenderProgram.Activate();
 	POVCamera.UploadMatrix(trailRenderProgram, "CameraMatrix");

@@ -6,43 +6,37 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-
 #include <imgui.h>
 
 #include "Settings.h"
 
 class Gui {
 public:
-    Gui(Settings& SRF, GLFWwindow* window);
     ~Gui();
-
-    Gui(const Gui&) = delete;
-    Gui& operator=(const Gui&) = delete;
+    Gui(Settings& SRF, GLFWwindow* window);
 
     void Update();
     void Render();
 
-    // Optional hooks you can wire from outside
+    // Callback functionss
     std::function<void(const std::string&)> OnLoadFile;
     std::function<void()> OnStartRecording;
     std::function<void()> OnStopRecording;
-
+    std::function<void()> OnStartRender;
 private:
-    void DrawLaunchMenu();
-
+    void DrawLaunchMenuPanel();
     void DrawScenePanel();
     void DrawRenderingPanel();
 
+    void DrawLaunchMenu();
     void DrawSettings();
     void DrawRender();
     void DrawRendering();
-
 private:
     Settings& settings;
     GLFWwindow* window{ nullptr };
     
     //move these to settings
-    char filePathBuffer[256]{};
     int maxViewObject{ 29 };
     bool recording{ false };
 };

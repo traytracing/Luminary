@@ -48,6 +48,10 @@ void RenderSystem::Link() {
 		inputDataProcessor.SetFile(path);
 		settings.appState = inputDataProcessor.processorState == ProcessorState::FileLoaded ? AppStateType::InScene : AppStateType::InEmptyScene;
 	};
+	gui.OnStartRender = [&]() {
+		if (settings.appState == AppStateType::InScene && inputDataProcessor.processorState == ProcessorState::FileLoaded)
+			settings.appState = AppStateType::Rendering;
+	};
 	gui.OnStartRecording = [&]() {
 		videoManager.UpdateOutputFile("output");
 	};
@@ -109,8 +113,8 @@ void RenderSystem::InEmptySceneLoop() {
 	glDepthMask(GL_TRUE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	skyRenderer.Render();
-	gridRenderer.Render();
+	if (settings.renderSky) skyRenderer.Render();
+	if (settings.renderGrid) gridRenderer.Render();
 
 	gui.Render();
 }
@@ -124,9 +128,9 @@ void RenderSystem::InSceneLoop() {
 	glDepthMask(GL_TRUE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	skyRenderer.Render();
+	if (settings.renderSky) skyRenderer.Render();
 	nbodyRenderer.Render();
-	gridRenderer.Render();
+	if (settings.renderGrid) gridRenderer.Render();
 
 	gui.Render();
 }
@@ -140,9 +144,9 @@ void RenderSystem::RenderingLoop() {
 	glDepthMask(GL_TRUE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	skyRenderer.Render();
+	if (settings.renderSky) skyRenderer.Render();
 	nbodyRenderer.Render();
-	gridRenderer.Render();
+	if (settings.renderGrid) gridRenderer.Render();
 
 	
 	static bool startVideo = true;
