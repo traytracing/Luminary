@@ -215,12 +215,13 @@ void Gui::DrawRender() {
     ImGui::SliderFloat("Axis Width", &settings.axisWidth, 0.001f, 10.0f);
 
     if (settings.appState == AppStateType::InScene) {
-        if (ImGui::Button("Start Render"))
-            OnStartRender();
-
-        ImGui::SliderInt("Render Frame", &settings.renderFrame, -1, settings.maxRenderFrame);
+        ImGui::SliderInt("Render Frame", &settings.renderFrame, 0, settings.maxRenderFrame);
+        settings.renderFrame = std::clamp(settings.renderFrame, 0, settings.maxRenderFrame);
         if (ImGui::Button("Screenshot"))
             OnScreenshot();
+
+        if (ImGui::Button("Start Render"))
+            OnStartRender();
     }
 }
 void Gui::DrawRendering() {

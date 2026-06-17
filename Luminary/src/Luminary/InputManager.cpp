@@ -41,10 +41,18 @@ void InputManager::mouse_button_callback(GLFWwindow* window, int button, int act
 void InputManager::Update() {
 	if (settings.appState == AppStateType::InEmptyScene)
 		settings.renderFrame = -1;
-	if (settings.appState == AppStateType::InScene)
-		settings.renderFrame = std::clamp(settings.renderFrame, -1, settings.maxRenderFrame);
-	if (settings.appState == AppStateType::Rendering)
+	if (settings.appState == AppStateType::InScene) {
+		updateData();
+	}
+	if (settings.appState == AppStateType::Rendering) {
 		settings.renderFrame++;
+		if (settings.renderFrame > settings.maxRenderFrame) {
+			settings.renderFrame = settings.maxRenderFrame;
+			settings.appState = AppStateType::InScene;
+			endVideo();
+		}
+		updateData();
+	}
 
 	settings.LMousePosition = settings.MousePosition;
 	glfwGetCursorPos(window, &settings.MousePosition.x, &settings.MousePosition.y);

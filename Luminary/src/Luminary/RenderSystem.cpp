@@ -38,19 +38,24 @@ RenderSystem::RenderSystem() {
 	
 }
 void RenderSystem::Link() {
+	inputManager.updateData = std::bind(&InputDataProcessor::UpdateData, &inputDataProcessor);
+	inputManager.endVideo = std::bind(&VideoManager::End, &videoManager);
 	std::vector<Camera*> cameras;
 	cameras.push_back(&POVCamera);
 	cameras.push_back(&SkyCamera);
 	inputManager.LinkCameras(cameras);
 
-	// FIX 
 	gui.OnLoadFile = [&](const std::string& path) {
+		settings.renderFrame = 0;
 		inputDataProcessor.SetFile(path);
 		settings.appState = inputDataProcessor.processorState == ProcessorState::FileLoaded ? AppStateType::InScene : AppStateType::InEmptyScene;
 	};
 	gui.OnStartRender = [&]() {
-		if (settings.appState == AppStateType::InScene && inputDataProcessor.processorState == ProcessorState::FileLoaded)
+		if (settings.appState == AppStateType::InScene && inputDataProcessor.processorState == ProcessorState::FileLoaded) {
 			settings.appState = AppStateType::Rendering;
+			settings.renderFrame = -1;
+			videoManager.Start();
+		}
 	};
 	gui.DepositScreenshot = [&]() {
 		if (!settings.screenshotDeposit)
@@ -82,6 +87,8 @@ void RenderSystem::Link() {
 	inputDataProcessor.AddRenderProgram(nbodyRenderer.objectRenderProgram);
 	inputDataProcessor.AddRenderProgram(nbodyRenderer.trailRenderProgram);
 	inputDataProcessor.AddRenderProgram(nbodyRenderer.axisRenderProgram);
+
+	videoManager.UpdateOutputFile("output");
 }
 
 
@@ -140,8 +147,6 @@ void RenderSystem::InEmptySceneLoop() {
 }
 
 void RenderSystem::InSceneLoop() {
-	inputDataProcessor.UpdateData(settings.renderFrame);
-
 	glViewport(0, 0, settings.w_Dimensions.x, settings.w_Dimensions.y);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClearColor(0.106f, 0.110f, 0.173f, 1.0f);
@@ -157,8 +162,6 @@ void RenderSystem::InSceneLoop() {
 }
 
 void RenderSystem::RenderingLoop() {
-	inputDataProcessor.UpdateData(settings.renderFrame);
-
 	glViewport(0, 0, settings.w_Dimensions.x, settings.w_Dimensions.y);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClearColor(0.106f, 0.110f, 0.173f, 1.0f);
@@ -169,23 +172,9 @@ void RenderSystem::RenderingLoop() {
 	nbodyRenderer.Render();
 	if (settings.renderGrid) gridRenderer.Render();
 
-	
-	static bool startVideo = true;
-	if (startVideo) {
-		videoManager.UpdateOutputFile("output");
-		videoManager.Start();
-		startVideo = false;
-	}
-
 	videoManager.AppendFrame();
 	gui.DepositScreenshot();
 	gui.Render();
-
-	if (inputDataProcessor.AtLastRenderFrame()) {
-		settings.appState = AppStateType::InScene;
-		startVideo = true;
-		videoManager.End();
-	}
 }
 
 void RenderSystem::Cleanup() {

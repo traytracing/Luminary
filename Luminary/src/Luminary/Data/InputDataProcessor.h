@@ -118,8 +118,8 @@ public:
 
 	void SetFile(std::string filepath);
 
-	bool UpdateData(int renderFrame);
-	bool AtLastRenderFrame();
+	bool UpdateData();
+	bool BeyondLastRenderFrame();
 
 	void AddRenderProgram(RenderProgram& program) { programs.push_back(&program); }
 private:

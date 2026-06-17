@@ -58,5 +58,3 @@ void Camera::UploadPosition(RenderProgram& renderProgram, const char* uniform) {
 	renderProgram.Activate();
 	glUniform3f(glGetUniformLocation(renderProgram.ID, uniform), position.x, position.y, position.z);
 }
-
-

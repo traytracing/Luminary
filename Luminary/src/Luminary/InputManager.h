@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "Luminary/Settings.h"
+#include "Luminary/Data/InputDataProcessor.h"
 #include "Core/Camera.h"
 
 class InputManager {
@@ -29,4 +30,6 @@ private:
     GLFWwindow* window;
 
     std::vector<std::function<void()>> updateFunctions;
+    std::function<bool()> updateData;
+    std::function<void()> endVideo;
 };

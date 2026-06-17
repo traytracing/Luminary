@@ -65,7 +65,7 @@ bool InputDataProcessor::UnpackFile() {
 	lf.times.resize(lf.dataFrameCount);
 	fs.read(reinterpret_cast<char*>(lf.times.data()), lf.dataFrameCount * sizeof(float)); if (lf.times.size() <= 0) return InvalidFile();
 
-	if (!UpdateData(0)) return InvalidFile();
+	if (!UpdateData()) return InvalidFile();
 
 	processorState = ProcessorState::FileLoaded;
 	return true;
@@ -144,24 +144,18 @@ void InputDataProcessor::UpdateTrailSSBOC(int renderFrame) {
 		glUniform1i(glGetUniformLocation(program->ID, "ValidTrailFrameCount"), validTrailFrameCount);
 	}
 }
-bool InputDataProcessor::UpdateData(int renderFrame) {
-	if (lf.chunk.fps == settings.fps && !lf.IsTimeValidRenderFrame(renderFrame)) return false;
+bool InputDataProcessor::UpdateData() {
+	if (lf.chunk.fps == settings.fps && !lf.IsTimeValidRenderFrame(settings.renderFrame)) return false;
 
 	// CPU data chunk
 	bool chunkReloaded = false;
-	if (!UpdateDataChunk(renderFrame, chunkReloaded)) return false;
+	if (!UpdateDataChunk(settings.renderFrame, chunkReloaded)) return false;
 
 	// GPU ssbo data and uniforms
 	if (chunkReloaded) UpdatePositionSSBOC();
 	
-	UpdateTrailSSBOC(renderFrame);
+	UpdateTrailSSBOC(settings.renderFrame);
 	
 	return true;
 }
 
-
-
-bool InputDataProcessor::AtLastRenderFrame() {
-	int maxRenderFrame = static_cast<int>((lf.times.back() - lf.times.front()) * lf.chunk.fps);
-	return lf.chunk.renderFrameIndex >= maxRenderFrame;
-}
