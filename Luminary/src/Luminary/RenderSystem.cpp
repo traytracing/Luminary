@@ -52,13 +52,33 @@ void RenderSystem::Link() {
 		if (settings.appState == AppStateType::InScene && inputDataProcessor.processorState == ProcessorState::FileLoaded)
 			settings.appState = AppStateType::Rendering;
 	};
-	gui.OnStartRecording = [&]() {
-		videoManager.UpdateOutputFile("output");
+	gui.DepositScreenshot = [&]() {
+		if (!settings.screenshotDeposit)
+			return;
+
+		glBindBuffer(GL_PIXEL_PACK_BUFFER, videoManager.screenshotPBO.GetID());
+		glBufferData(GL_PIXEL_PACK_BUFFER, settings.screenshotDimension.x * settings.screenshotDimension.y * 3, NULL, GL_STREAM_READ);
+		glPixelStorei(GL_PACK_ALIGNMENT, 1);
+		glReadBuffer(GL_BACK);
+		glReadPixels(0, 0, settings.screenshotDimension.x, settings.screenshotDimension.y, GL_RGB, GL_UNSIGNED_BYTE, 0);
+
+		unsigned char* gpuPtr = (unsigned char*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+		if (gpuPtr) {
+			stbi_flip_vertically_on_write(true);
+			static int screenshotID = 0;
+			std::string screenshotName = GetAssetPath("outputs/screenshot" + std::to_string(screenshotID) + ".png");
+			stbi_write_png(screenshotName.c_str(), settings.screenshotDimension.x, settings.screenshotDimension.y, 3, gpuPtr, settings.screenshotDimension.x * 3);
+			screenshotID++;
+			glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+		}
+		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+		settings.screenshotDeposit = false;
 	};
-	gui.OnStopRecording = [&]() {
-		videoManager.End();
+	gui.OnScreenshot = [&]() {
+		settings.screenshotDimension = settings.w_Dimensions;
+		settings.screenshotDeposit = true;
 	};
-	
+
 	inputDataProcessor.AddRenderProgram(nbodyRenderer.objectRenderProgram);
 	inputDataProcessor.AddRenderProgram(nbodyRenderer.trailRenderProgram);
 	inputDataProcessor.AddRenderProgram(nbodyRenderer.axisRenderProgram);
@@ -132,6 +152,7 @@ void RenderSystem::InSceneLoop() {
 	nbodyRenderer.Render();
 	if (settings.renderGrid) gridRenderer.Render();
 
+	gui.DepositScreenshot();
 	gui.Render();
 }
 
@@ -157,6 +178,7 @@ void RenderSystem::RenderingLoop() {
 	}
 
 	videoManager.AppendFrame();
+	gui.DepositScreenshot();
 	gui.Render();
 
 	if (inputDataProcessor.AtLastRenderFrame()) {

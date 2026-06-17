@@ -11,6 +11,7 @@
 #include "Core/AssetPath.h"
 
 class VideoManager {
+	friend class RenderSystem;
 public:
 	~VideoManager() = default;
 	VideoManager(const Settings& SRF);
@@ -27,4 +28,6 @@ private:
 	const int bytesPerPixel = 4; // BGRA8
 	const GLsizeiptr frameBytes = GLsizeiptr(SRF.w_Dimensions.x * SRF.w_Dimensions.y * bytesPerPixel);
 	PBO ffmpegPBO;
+
+	PBO screenshotPBO;
 };

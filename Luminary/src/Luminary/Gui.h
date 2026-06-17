@@ -20,9 +20,9 @@ public:
 
     // Callback functionss
     std::function<void(const std::string&)> OnLoadFile;
-    std::function<void()> OnStartRecording;
-    std::function<void()> OnStopRecording;
     std::function<void()> OnStartRender;
+    std::function<void()> OnScreenshot;
+    std::function<void()> DepositScreenshot;
 private:
     void DrawLaunchMenuPanel();
     void DrawScenePanel();
@@ -30,13 +30,10 @@ private:
 
     void DrawLaunchMenu();
     void DrawSettings();
+    void DrawLumenFile();
     void DrawRender();
     void DrawRendering();
 private:
     Settings& settings;
     GLFWwindow* window{ nullptr };
-    
-    //move these to settings
-    int maxViewObject{ 29 };
-    bool recording{ false };
 };

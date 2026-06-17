@@ -39,9 +39,12 @@ void InputManager::mouse_button_callback(GLFWwindow* window, int button, int act
 }
 
 void InputManager::Update() {
-	//glfwSwapInterval(0); handle in gui
-
-	settings.renderFrame = settings.appState == AppStateType::Rendering ? settings.renderFrame + 1 : -1;
+	if (settings.appState == AppStateType::InEmptyScene)
+		settings.renderFrame = -1;
+	if (settings.appState == AppStateType::InScene)
+		settings.renderFrame = std::clamp(settings.renderFrame, -1, settings.maxRenderFrame);
+	if (settings.appState == AppStateType::Rendering)
+		settings.renderFrame++;
 
 	settings.LMousePosition = settings.MousePosition;
 	glfwGetCursorPos(window, &settings.MousePosition.x, &settings.MousePosition.y);
@@ -59,10 +62,11 @@ void InputManager::LinkCameras(std::vector<Camera*> cameras) {
 	auto a0 = [this, povCamera] {
 		if (settings.appState != AppStateType::InEmptyScene && settings.appState != AppStateType::InScene && settings.appState != AppStateType::Rendering)
 			return;
-		if (!settings.cameraRenderLock && !settings.cameraGUIClickLock)
+		if (!settings.cameraRenderLock && !settings.cameraGuiLock)
 			povCamera->Inputs(window);
-		
-		povCamera->UpdateMatrix(45.0f, 0.1f, 1000.0f);
+		else
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		povCamera->UpdateMatrix(settings.FOVdeg, settings.nearPlane, settings.farPlane);
 	};
 	updateFunctions.push_back(std::move(a0));
 
@@ -70,9 +74,9 @@ void InputManager::LinkCameras(std::vector<Camera*> cameras) {
 	auto a1 = [this, povCamera, skyCamera] {
 		if (settings.appState != AppStateType::InEmptyScene && settings.appState != AppStateType::InScene && settings.appState != AppStateType::Rendering)
 			return;
-		if (!settings.cameraRenderLock && !settings.cameraGUIClickLock)
+		if (!settings.cameraRenderLock && !settings.cameraGuiLock)
 			skyCamera->orientation = povCamera->orientation;
-		skyCamera->UpdateMatrix(45.0f, 0.1f, 1000.0f);
+		skyCamera->UpdateMatrix(settings.FOVdeg, settings.nearPlane, settings.farPlane);
 	};
 	updateFunctions.push_back(std::move(a1));
 }

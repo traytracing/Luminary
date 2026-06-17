@@ -32,18 +32,31 @@ struct Settings {
 	AppStateType appState{ AppStateType::Boot };
 	
 	bool cameraRenderLock{ false };
-	bool cameraGUIClickLock{ false };
+	bool cameraGuiLock{ false };
 	glm::dvec2 MousePosition{}, LMousePosition{}, DMousePosition{};
 	bool LeftMouseDown{};
+	float FOVdeg{ 60.0f };
+	float nearPlane{ 0.01f };
+	float farPlane{ 1000.0f };
 
+	bool screenshotDeposit{ false };
+	glm::uvec2 screenshotDimension{};
 
 	int renderFrame{ -1 };
-	int objectSource{ -1 };
-	int objectTarget{ -1 };
+	int maxRenderFrame{ -1 };
+	int objectCount{ 0 };
+	int objectSource{ 0 };
+	int objectTarget{ 0 };
 	glm::vec4 trailColor{ InitialTrailColor };
 	float trailTime = 2.0f;
 	float trailWidth = 5.0f;
 	float axisWidth = 2.3f;
+	
 	bool renderGrid{ true };
 	bool renderSky{ true };
+	bool renderAxes{ true };
+	bool renderTrails{ true };
+	bool renderObjects{ true };
+
+	int maxDataChunkBytes{ 20000 };
 };

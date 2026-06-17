@@ -19,8 +19,9 @@ enum class ProcessorState {
 };
 
 struct LumenFile { // object count and frame count (and their vectors) are gauranteed to be atleast 1
-	int MaxDataChunkByteSize = 20000;
+	LumenFile(const Settings& SRF) : SRF(&SRF) {}
 
+	const Settings* SRF;
 	std::string filepath;
 	int objectCount{ -1 };
 	int dataFrameCount{ -1 };
@@ -77,7 +78,7 @@ struct LumenFile { // object count and frame count (and their vectors) are gaura
 		int start = firstDataFrame;
 		if (start > 0) start -= 1; // quadratic interpolation one frame buffer
 
-		int maxDataFramesInChunk = MaxDataChunkByteSize / (objectCount * int(sizeof(glm::vec4)));
+		int maxDataFramesInChunk = SRF->maxDataChunkBytes / (objectCount * int(sizeof(glm::vec4)));
 		if (maxDataFramesInChunk < 3) maxDataFramesInChunk = 3;
 		int end = start + maxDataFramesInChunk;
 
@@ -112,10 +113,9 @@ class InputDataProcessor {
 	friend class RenderSystem;
 	friend class NbodyRenderer;
 public:
-	InputDataProcessor(const Settings& SRF);
+	InputDataProcessor(Settings& settings);
 	~InputDataProcessor();
 
-	void SetChunkMaxData(int newMaxDataChunkByteSize);
 	void SetFile(std::string filepath);
 
 	bool UpdateData(int renderFrame);
@@ -133,13 +133,14 @@ private:
 
 	int validTrailFrameCount{ 0 };
 
+	Settings& settings;
+
 	ProcessorState processorState{ ProcessorState::NoFileLoaded };
 	std::fstream fs{};
-	LumenFile lf{};
+	LumenFile lf{ settings };
 
 	SSBOC positionSSBOC;
 	SSBOC trailSSBOC;
 
 	std::vector<RenderProgram*> programs;
-	const Settings& SRF;
 };

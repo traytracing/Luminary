@@ -16,14 +16,12 @@ namespace {
 InputDataProcessor::~InputDataProcessor() {
 	Reset();
 }
-InputDataProcessor::InputDataProcessor(const Settings& SRF) : SRF(SRF) {
+InputDataProcessor::InputDataProcessor(Settings& settings) : settings(settings) {
 }
 
 
 
-void InputDataProcessor::SetChunkMaxData(int newMaxDataChunkByteSize) {
-	lf.MaxDataChunkByteSize = newMaxDataChunkByteSize;
-}
+
 
 void InputDataProcessor::Reset() {
 	positionSSBOC.Reset();
@@ -35,9 +33,10 @@ void InputDataProcessor::Reset() {
 
 	fs.clear();
 
-	lf = LumenFile{};
+	lf = LumenFile(settings);
 	processorState = ProcessorState::NoFileLoaded;
 
+	settings.objectCount = 0;
 	trailWriteFrame = 0;
 	previousRenderFrame = -1;
 	validTrailFrameCount = 0;
@@ -60,6 +59,7 @@ bool InputDataProcessor::UnpackFile() {
 	if (!fs) return InvalidFile();
 
 	fs.read(reinterpret_cast<char*> (&lf.objectCount), sizeof(int)); if (lf.objectCount <= 0) return InvalidFile();
+	settings.objectCount = lf.objectCount;
 	fs.read(reinterpret_cast<char*> (&lf.dataFrameCount), sizeof(int)); if (lf.dataFrameCount <= 0) return InvalidFile();
 
 	lf.times.resize(lf.dataFrameCount);
@@ -75,12 +75,13 @@ bool InputDataProcessor::UnpackFile() {
 bool InputDataProcessor::UpdateDataChunk(int renderFrame, bool& chunkReloaded) {
 	chunkReloaded = false;
 
-	if (lf.chunk.fps == SRF.fps && lf.IsRenderFrameInsideChunk(renderFrame)) {
+	if (lf.chunk.fps == settings.fps && lf.IsRenderFrameInsideChunk(renderFrame)) {
 		lf.chunk.renderFrameIndex = renderFrame;
 		return true;
 	}
 
-	lf.chunk.fps = SRF.fps;
+	lf.chunk.fps = settings.fps;
+	settings.maxRenderFrame = static_cast<int>((lf.times.back() - lf.times.front()) * lf.chunk.fps);
 	lf.InitChunk(renderFrame);
 	if (!lf.IsRenderFrameInsideChunk(renderFrame) && renderFrame != 0) return false;
 
@@ -108,7 +109,7 @@ void InputDataProcessor::UpdatePositionSSBOC() {
 	}
 }
 void InputDataProcessor::UpdateTrailSSBOC(int renderFrame) {
-	int trailFrameCount = SRF.trailTime * lf.chunk.fps;
+	int trailFrameCount = settings.trailTime * lf.chunk.fps;
 	int localRenderFrame = lf.chunk.renderFrameIndex - lf.chunk.startRenderFrame;
 
 	bool resized = trailSSBOC.Resize(trailFrameCount * lf.objectCount * sizeof(glm::vec4));
@@ -144,7 +145,7 @@ void InputDataProcessor::UpdateTrailSSBOC(int renderFrame) {
 	}
 }
 bool InputDataProcessor::UpdateData(int renderFrame) {
-	if (lf.chunk.fps == SRF.fps && !lf.IsTimeValidRenderFrame(renderFrame)) return false;
+	if (lf.chunk.fps == settings.fps && !lf.IsTimeValidRenderFrame(renderFrame)) return false;
 
 	// CPU data chunk
 	bool chunkReloaded = false;

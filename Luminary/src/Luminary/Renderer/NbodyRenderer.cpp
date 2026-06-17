@@ -42,6 +42,7 @@ void NbodyRenderer::SetUniforms() {
 	POVCamera.UploadMatrix(trailRenderProgram, "CameraMatrix");
 	glUniform4f(glGetUniformLocation(trailRenderProgram.ID, "TrailColor"), SRF.trailColor.x, SRF.trailColor.y, SRF.trailColor.z, SRF.trailColor.w);
 
+	axisRenderProgram.Activate();
 	POVCamera.UploadMatrix(axisRenderProgram, "CameraMatrix");
 	glUniform1f(glGetUniformLocation(axisRenderProgram.ID, "Scale"), 0.35f);
 }
@@ -50,17 +51,19 @@ void NbodyRenderer::Render() {
 	SetUniforms();
 
 	// objects
-	objectRenderProgram.Activate();
-	IDPR.positionSSBOC.BindBase(0);
-	blackholeVAO.Bind();
+	if (SRF.renderObjects) {
+		objectRenderProgram.Activate();
+		IDPR.positionSSBOC.BindBase(0);
+		blackholeVAO.Bind();
 
-	glEnable(GL_DEPTH_TEST);
-	glDepthMask(GL_TRUE);
-	glDisable(GL_BLEND);
-	glDrawArrays(GL_POINTS, 0, IDPR.lf.objectCount);
+		glEnable(GL_DEPTH_TEST);
+		glDepthMask(GL_TRUE);
+		glDisable(GL_BLEND);
+		glDrawArrays(GL_POINTS, 0, IDPR.lf.objectCount);
+	}
 	
 	// sky
-	if (IDPR.validTrailFrameCount >= 2 && IDPR.lf.objectCount > 0) {
+	if (SRF.renderTrails && IDPR.validTrailFrameCount >= 2 && IDPR.lf.objectCount > 0) {
 		trailRenderProgram.Activate();
 		IDPR.trailSSBOC.BindBase(1);
 		
@@ -74,14 +77,16 @@ void NbodyRenderer::Render() {
 	}
 
 	// axis
-	glEnable(GL_DEPTH_TEST);
-	glDepthMask(GL_FALSE);
-	glEnable(GL_BLEND);
-	glBlendEquation(GL_FUNC_ADD);
-	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-	glLineWidth(SRF.axisWidth);
+	if (SRF.renderAxes) {
+		glEnable(GL_DEPTH_TEST);
+		glDepthMask(GL_FALSE);
+		glEnable(GL_BLEND);
+		glBlendEquation(GL_FUNC_ADD);
+		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		glLineWidth(SRF.axisWidth);
 
-	axisRenderProgram.Activate();
-	axisVAO.Bind();
-	glDrawArrays(GL_POINTS, 0, IDPR.lf.objectCount);
+		axisRenderProgram.Activate();
+		axisVAO.Bind();
+		glDrawArrays(GL_POINTS, 0, IDPR.lf.objectCount);
+	}
 }

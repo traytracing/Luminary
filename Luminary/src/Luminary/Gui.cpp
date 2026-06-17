@@ -21,7 +21,7 @@ namespace {
     const float launchMenuWidth = 420.0f;
     const float launchMenuHeight = 360.0f;
 
-    const ImVec2 mainPanelSize = ImVec2(420.0f, 640.0f);
+    const ImVec2 mainPanelSize = ImVec2(420.0f, 840.0f); //420.0f, 640.0f
 
     char filePathBuffer[256]{};
 }
@@ -63,6 +63,8 @@ void Gui::Update() {
 
     viewport = ImGui::GetMainViewport();
 
+    settings.cameraGuiLock = ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard;
+
     switch (settings.appState) {
     case AppStateType::LaunchMenu:
         DrawLaunchMenuPanel();
@@ -99,6 +101,7 @@ void Gui::DrawScenePanel() {
     ImGui::Begin("Scene Panel", 0, noMoveFlags);
 
     DrawSettings();
+    DrawLumenFile();
     DrawRender();
     
     ImGui::End();
@@ -163,51 +166,71 @@ void Gui::DrawSettings() {
     ImGui::Text("Settings");
     ImGui::Separator();
 
+    ImGui::Text("Window size: %d x %d", static_cast<int>(settings.w_Dimensions.x), static_cast<int>(settings.w_Dimensions.y));
+
     if (ImGui::Checkbox("VSync", &settings.vsync))
         glfwSwapInterval(settings.vsync ? 1 : 0);
     ImGui::SameLine();
     const float fps = ImGui::GetIO().Framerate;
     ImGui::Text("FPS: %.1f", fps);
-
+}
+void Gui::DrawLumenFile() {
     ImGui::Spacing();
+    ImGui::Text("Lumen File");
+    ImGui::Separator();
     ImGui::SetNextItemWidth(-1.0f);
     ImGui::InputTextWithHint("##FilePath", "File name (ex. InputData)", filePathBuffer, IM_ARRAYSIZE(filePathBuffer));
     if (ImGui::Button("Load File", ImVec2(-1.0f, 0.0f)))
         OnLoadFile(std::string(filePathBuffer));
-
-    ImGui::Spacing();
-    ImGui::ColorEdit4("Trail Color", reinterpret_cast<float*>(&settings.trailColor));
 }
 void Gui::DrawRender() {
     ImGui::Spacing();
     ImGui::Text("Render");
     ImGui::Separator();
 
+    ImGui::InputInt("Max Chunk Bytes", &settings.maxDataChunkBytes, 20000, 10000000);
+
     ImGui::InputInt("Render FPS ##input", &settings.fps);
     settings.fps = std::clamp(settings.fps, 10, 200);
 
     ImGui::Checkbox("Camera Lock", &settings.cameraRenderLock);
 
-    ImGui::SliderInt("Object Source (from)", &settings.objectSource, -1, maxViewObject);
-    settings.objectSource = std::clamp(settings.objectSource, -1, maxViewObject);
-    ImGui::SliderInt("Object Target (to)", &settings.objectTarget, -1, maxViewObject);
-    settings.objectTarget = std::clamp(settings.objectTarget, -1, maxViewObject);
+    ImGui::SliderInt("Object Source (from)", &settings.objectSource, -1, settings.objectCount-1);
+    settings.objectSource = std::clamp(settings.objectSource, -1, settings.objectCount-1);
+    ImGui::SliderInt("Object Target (to)", &settings.objectTarget, -1, settings.objectCount-1);
+    settings.objectTarget = std::clamp(settings.objectTarget, -1, settings.objectCount-1);
+
+    ImGui::SliderFloat("FOV degree", &settings.FOVdeg, 30.0f, 110.0f);
+    ImGui::SliderFloat("Near Plane", &settings.nearPlane, 0.01f, 0.1f);
+    ImGui::SliderFloat("Far Plane", &settings.farPlane, 10.0f, 10000.0f);
 
     ImGui::Checkbox("Render Grid", &settings.renderGrid);
     ImGui::Checkbox("Render Sky", &settings.renderSky);
+    ImGui::Checkbox("Render Objects", &settings.renderObjects);
+    ImGui::Checkbox("Render Trails", &settings.renderTrails);
+    ImGui::ColorEdit4("Trail Color", reinterpret_cast<float*>(&settings.trailColor));
+    ImGui::SliderFloat("Trail Time", &settings.trailTime, 0.001f, 20.0f);
+    ImGui::SliderFloat("Trail Width", &settings.trailWidth, 0.001f, 10.0f);
+    ImGui::Checkbox("Render Axes", &settings.renderAxes);
+    ImGui::SliderFloat("Axis Width", &settings.axisWidth, 0.001f, 10.0f);
 
-    if (ImGui::Button("Start Render"))
-        OnStartRender();
+    if (settings.appState == AppStateType::InScene) {
+        if (ImGui::Button("Start Render"))
+            OnStartRender();
+
+        ImGui::SliderInt("Render Frame", &settings.renderFrame, -1, settings.maxRenderFrame);
+        if (ImGui::Button("Screenshot"))
+            OnScreenshot();
+    }
 }
 void Gui::DrawRendering() {
+    //fix 
     ImGui::Spacing();
     ImGui::Text("Rendering");
     ImGui::Separator();
 
-    settings.objectSource = std::clamp(settings.objectSource, 0, maxViewObject);
 
     ImGui::SetNextItemWidth(-1.0f);
-    ImGui::SliderInt("Object", &settings.objectSource, 0, maxViewObject);
 
     ImGui::SameLine();
 
@@ -220,31 +243,4 @@ void Gui::DrawRendering() {
     ImGui::Text("Current Object: %d", settings.objectSource);
     ImGui::Spacing();
     ImGui::Text("Window: %d x %d", settings.w_Dimensions.x, settings.w_Dimensions.y);
-
-    if (!recording) {
-        if (ImGui::Button("Start Recording", ImVec2(-1.0f, 0.0f))) {
-            recording = true;
-
-            if (OnStartRecording) {
-                OnStartRecording();
-            }
-        }
-    }
-    else {
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.1f, 0.1f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.8f, 0.15f, 0.15f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
-
-        if (ImGui::Button("Stop Recording", ImVec2(-1.0f, 0.0f))) {
-            recording = false;
-
-            if (OnStopRecording) {
-                OnStopRecording();
-            }
-        }
-
-        ImGui::PopStyleColor(3);
-    }
-
-    ImGui::Text("Recording: %s", recording ? "Yes" : "No");
 }
