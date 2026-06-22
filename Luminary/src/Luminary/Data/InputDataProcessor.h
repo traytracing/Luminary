@@ -41,7 +41,7 @@ struct LumenFile { // object count and frame count (and their vectors) are gaura
 		int renderFrameIndex{ -1 };
 	} chunk;
 	bool IsRenderFrameInsideChunk(int renderFrame) {
-		return renderFrame > chunk.startRenderFrame && renderFrame < chunk.endRenderFrame - 1;
+		return renderFrame >= chunk.startRenderFrame && renderFrame < chunk.endRenderFrame;
 	}
 
 	int FindFirstDataFrame(int renderFrame) {
@@ -120,6 +120,7 @@ public:
 
 	bool UpdateData();
 	bool BeyondLastRenderFrame();
+	glm::vec4 GetObjectPosition(int object);
 
 	void AddRenderProgram(RenderProgram& program) { programs.push_back(&program); }
 private:
@@ -141,6 +142,8 @@ private:
 
 	SSBOC positionSSBOC;
 	SSBOC trailSSBOC;
+	SSBOC cameraSSBOC;
+	std::vector<glm::vec4> cameraObjectPositions;
 
 	std::vector<RenderProgram*> programs;
 };

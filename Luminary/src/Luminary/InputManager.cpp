@@ -43,6 +43,10 @@ void InputManager::Update() {
 		settings.renderFrame = -1;
 	if (settings.appState == AppStateType::InScene) {
 		updateData();
+		if (settings.objectSource != -1)
+			settings.objectSourcePosition = getObjectSourcePosition();
+		if (settings.objectTarget != -1)
+			settings.objectTargetPosition = getObjectTargetPosition();
 	}
 	if (settings.appState == AppStateType::Rendering) {
 		settings.renderFrame++;
@@ -52,6 +56,10 @@ void InputManager::Update() {
 			endVideo();
 		}
 		updateData();
+		if (settings.objectSource != -1)
+			settings.objectSourcePosition = getObjectSourcePosition();
+		if (settings.objectTarget != -1)
+			settings.objectTargetPosition = getObjectTargetPosition();
 	}
 
 	settings.LMousePosition = settings.MousePosition;
@@ -70,10 +78,7 @@ void InputManager::LinkCameras(std::vector<Camera*> cameras) {
 	auto a0 = [this, povCamera] {
 		if (settings.appState != AppStateType::InEmptyScene && settings.appState != AppStateType::InScene && settings.appState != AppStateType::Rendering)
 			return;
-		if (!settings.cameraRenderLock && !settings.cameraGuiLock)
-			povCamera->Inputs(window);
-		else
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		povCamera->Inputs(window);
 		povCamera->UpdateMatrix(settings.FOVdeg, settings.nearPlane, settings.farPlane);
 	};
 	updateFunctions.push_back(std::move(a0));
@@ -82,8 +87,7 @@ void InputManager::LinkCameras(std::vector<Camera*> cameras) {
 	auto a1 = [this, povCamera, skyCamera] {
 		if (settings.appState != AppStateType::InEmptyScene && settings.appState != AppStateType::InScene && settings.appState != AppStateType::Rendering)
 			return;
-		if (!settings.cameraRenderLock && !settings.cameraGuiLock)
-			skyCamera->orientation = povCamera->orientation;
+		skyCamera->orientation = povCamera->orientation;
 		skyCamera->UpdateMatrix(settings.FOVdeg, settings.nearPlane, settings.farPlane);
 	};
 	updateFunctions.push_back(std::move(a1));

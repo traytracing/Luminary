@@ -145,10 +145,62 @@ __global__ void InterpolateChunkKernel(float4* outputPositions, const float4* in
     outputPositions[globalId] = QuadraticInterpolate(renderTime, times[i0], times[i1], times[i2], p0, p1, p2);
 }
 
-void UpdateChunkDataCuda(cudaGraphicsResource* cudaSSBO, const DataChunkCuda& chunk) {
+__global__ void UpdateCameraSSBOKernel(float4* cameraPositions, const float4* interpolatedPositions, int objectCount, int renderFrameCount, int objectSource, int objectTarget)
+{
+    int localRenderFrame = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (localRenderFrame >= renderFrameCount) {
+        return;
+    }
+
+    int cameraBase = localRenderFrame * 2;
+
+    if (objectSource >= 0 && objectSource < objectCount) {
+        int sourceIndex = localRenderFrame * objectCount + objectSource;
+        cameraPositions[cameraBase + 0] = interpolatedPositions[sourceIndex];
+    }
+
+    if (objectTarget >= 0 && objectTarget < objectCount) {
+        int targetIndex = localRenderFrame * objectCount + objectTarget;
+        cameraPositions[cameraBase + 1] = interpolatedPositions[targetIndex];
+    }
+}
+void UpdateChunkDataCuda(cudaGraphicsResource* cudaSSBO, cudaGraphicsResource* cudaCameraSSBO, const DataChunkCuda& chunk, int objectSource, int objectTarget)
+{
+    if (!cudaSSBO) {
+        std::cerr << "CUDA Error: cudaSSBO is null\n";
+        return;
+    }
+
+    if (!cudaCameraSSBO) {
+        std::cerr << "CUDA Error: cudaCameraSSBO is null\n";
+        return;
+    }
+
+    if (!chunk.times || !chunk.positions) {
+        std::cerr << "CUDA Error: chunk.times or chunk.positions is null\n";
+        return;
+    }
+
+    if (chunk.objectCount <= 0 || chunk.dataFrameCount <= 0 || chunk.renderFrameCount <= 0 || chunk.fps <= 0) {
+        std::cerr << "CUDA Error: invalid chunk values\n";
+        return;
+    }
+
+    if (objectSource < -1 || objectSource >= chunk.objectCount) {
+        std::cerr << "CUDA Error: objectSource out of range\n";
+        return;
+    }
+
+    if (objectTarget < -1 || objectTarget >= chunk.objectCount) {
+        std::cerr << "CUDA Error: objectTarget out of range\n";
+        return;
+    }
+
     const size_t timesBytes = chunk.dataFrameCount * sizeof(float);
     const size_t inputPositionsBytes = chunk.dataFrameCount * chunk.objectCount * sizeof(float4);
     const size_t outputPositionsBytes = chunk.renderFrameCount * chunk.objectCount * sizeof(float4);
+    const size_t cameraPositionsBytes = chunk.renderFrameCount * 2 * sizeof(float4);
 
     if (!EnsureCudaBuffer(reinterpret_cast<void**>(&gDTimes), &gDTimesCapacity, timesBytes, "cudaMalloc gDTimes")) return;
     if (!EnsureCudaBuffer(reinterpret_cast<void**>(&gDInputPositions), &gDInputPositionsCapacity, inputPositionsBytes, "cudaMalloc gDInputPositions")) return;
@@ -156,25 +208,47 @@ void UpdateChunkDataCuda(cudaGraphicsResource* cudaSSBO, const DataChunkCuda& ch
     if (!CheckCuda(cudaMemcpy(gDTimes, chunk.times, timesBytes, cudaMemcpyHostToDevice), "cudaMemcpy gDTimes")) return;
     if (!CheckCuda(cudaMemcpy(gDInputPositions, chunk.positions, inputPositionsBytes, cudaMemcpyHostToDevice), "cudaMemcpy gDInputPositions")) return;
 
-    if (!CheckCuda(cudaGraphicsMapResources(1, &cudaSSBO, 0), "cudaGraphicsMapResources")) return;
+    cudaGraphicsResource* resources[2] = { cudaSSBO, cudaCameraSSBO };
+
+    if (!CheckCuda(cudaGraphicsMapResources(2, resources, 0), "cudaGraphicsMapResources")) return;
 
     float4* dOutputPositions = nullptr;
-    size_t mappedSize = 0;
+    float4* dCameraPositions = nullptr;
 
-    if (!CheckCuda(cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void**>(&dOutputPositions), &mappedSize, cudaSSBO), "cudaGraphicsResourceGetMappedPointer")) {
-        cudaGraphicsUnmapResources(1, &cudaSSBO, 0);
+    size_t outputMappedSize = 0;
+    size_t cameraMappedSize = 0;
+
+    if (!CheckCuda(cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void**>(&dOutputPositions), &outputMappedSize, cudaSSBO), "cudaGraphicsResourceGetMappedPointer cudaSSBO")) {
+        cudaGraphicsUnmapResources(2, resources, 0);
+        return;
+    }
+
+    if (!CheckCuda(cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void**>(&dCameraPositions), &cameraMappedSize, cudaCameraSSBO), "cudaGraphicsResourceGetMappedPointer cudaCameraSSBO")) {
+        cudaGraphicsUnmapResources(2, resources, 0);
         return;
     }
 
     if (!dOutputPositions) {
         std::cerr << "CUDA Error: mapped output pointer is null\n";
-        cudaGraphicsUnmapResources(1, &cudaSSBO, 0);
+        cudaGraphicsUnmapResources(2, resources, 0);
         return;
     }
 
-    if (mappedSize < outputPositionsBytes) {
-        std::cerr << "CUDA Error: mapped SSBO too small. mappedSize=" << mappedSize << " required=" << outputPositionsBytes << std::endl;
-        cudaGraphicsUnmapResources(1, &cudaSSBO, 0);
+    if (!dCameraPositions) {
+        std::cerr << "CUDA Error: mapped camera pointer is null\n";
+        cudaGraphicsUnmapResources(2, resources, 0);
+        return;
+    }
+
+    if (outputMappedSize < outputPositionsBytes) {
+        std::cerr << "CUDA Error: mapped position SSBO too small. mappedSize=" << outputMappedSize << " required=" << outputPositionsBytes << std::endl;
+        cudaGraphicsUnmapResources(2, resources, 0);
+        return;
+    }
+
+    if (cameraMappedSize < cameraPositionsBytes) {
+        std::cerr << "CUDA Error: mapped camera SSBO too small. mappedSize=" << cameraMappedSize << " required=" << cameraPositionsBytes << std::endl;
+        cudaGraphicsUnmapResources(2, resources, 0);
         return;
     }
 
@@ -185,18 +259,26 @@ void UpdateChunkDataCuda(cudaGraphicsResource* cudaSSBO, const DataChunkCuda& ch
     InterpolateChunkKernel << <blocks, threads >> > (dOutputPositions, gDInputPositions, gDTimes, chunk.objectCount, chunk.dataFrameCount, chunk.renderFrameCount, chunk.startRenderTime, float(chunk.fps));
 
     if (!CheckCuda(cudaGetLastError(), "InterpolateChunkKernel launch")) {
-        cudaGraphicsUnmapResources(1, &cudaSSBO, 0);
+        cudaGraphicsUnmapResources(2, resources, 0);
         return;
     }
 
-    if (!CheckCuda(cudaDeviceSynchronize(), "InterpolateChunkKernel sync")) {
-        cudaGraphicsUnmapResources(1, &cudaSSBO, 0);
+    blocks = (chunk.renderFrameCount + threads - 1) / threads;
+
+    UpdateCameraSSBOKernel << <blocks, threads >> > (dCameraPositions, dOutputPositions, chunk.objectCount, chunk.renderFrameCount, objectSource, objectTarget);
+
+    if (!CheckCuda(cudaGetLastError(), "UpdateCameraSSBOKernel launch")) {
+        cudaGraphicsUnmapResources(2, resources, 0);
         return;
     }
 
-    CheckCuda(cudaGraphicsUnmapResources(1, &cudaSSBO, 0), "cudaGraphicsUnmapResources");
+    if (!CheckCuda(cudaDeviceSynchronize(), "UpdateChunkDataCuda sync")) {
+        cudaGraphicsUnmapResources(2, resources, 0);
+        return;
+    }
+
+    CheckCuda(cudaGraphicsUnmapResources(2, resources, 0), "cudaGraphicsUnmapResources");
 }
-
 void CleanupChunkDataCuda()
 {
     if (gDTimes) {
@@ -294,6 +376,79 @@ bool CopyCurrentFrameToTrailCuda(cudaGraphicsResource* cudaPositionSSBO, cudaGra
     return true;
 }
 
+bool ReadWholeCameraBufferToCPU(cudaGraphicsResource* cudaCameraSSBO, int renderFrameCount, float4* outCameraPositions, size_t outCameraPositionCount)
+{
+    if (!cudaCameraSSBO) {
+        std::cerr << "CUDA Error: cudaCameraSSBO is null\n";
+        return false;
+    }
+
+    if (!outCameraPositions) {
+        std::cerr << "CUDA Error: outCameraPositions is null\n";
+        return false;
+    }
+
+    if (renderFrameCount <= 0) {
+        std::cerr << "CUDA Error: invalid renderFrameCount\n";
+        return false;
+    }
+
+    const size_t elementCount = size_t(renderFrameCount) * 2;
+
+    if (outCameraPositionCount < elementCount) {
+        std::cerr << "CUDA Error: output CPU camera buffer too small. outCameraPositionCount=" << outCameraPositionCount << " required=" << elementCount << std::endl;
+        return false;
+    }
+
+    const size_t requiredBytes = elementCount * sizeof(float4);
+
+    cudaError_t err = cudaGraphicsMapResources(1, &cudaCameraSSBO, 0);
+
+    if (err != cudaSuccess) {
+        std::cerr << "CUDA Error: map camera SSBO: " << cudaGetErrorString(err) << std::endl;
+        return false;
+    }
+
+    float4* dCameraPositions = nullptr;
+    size_t mappedSize = 0;
+
+    err = cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void**>(&dCameraPositions), &mappedSize, cudaCameraSSBO);
+
+    if (err != cudaSuccess) {
+        std::cerr << "CUDA Error: get mapped camera pointer: " << cudaGetErrorString(err) << std::endl;
+        cudaGraphicsUnmapResources(1, &cudaCameraSSBO, 0);
+        return false;
+    }
+
+    if (!dCameraPositions) {
+        std::cerr << "CUDA Error: mapped camera pointer is null\n";
+        cudaGraphicsUnmapResources(1, &cudaCameraSSBO, 0);
+        return false;
+    }
+
+    if (mappedSize < requiredBytes) {
+        std::cerr << "CUDA Error: mapped camera SSBO too small. mappedSize=" << mappedSize << " required=" << requiredBytes << std::endl;
+        cudaGraphicsUnmapResources(1, &cudaCameraSSBO, 0);
+        return false;
+    }
+
+    err = cudaMemcpy(outCameraPositions, dCameraPositions, requiredBytes, cudaMemcpyDeviceToHost);
+
+    if (err != cudaSuccess) {
+        std::cerr << "CUDA Error: copy camera SSBO to CPU: " << cudaGetErrorString(err) << std::endl;
+        cudaGraphicsUnmapResources(1, &cudaCameraSSBO, 0);
+        return false;
+    }
+
+    err = cudaGraphicsUnmapResources(1, &cudaCameraSSBO, 0);
+
+    if (err != cudaSuccess) {
+        std::cerr << "CUDA Error: unmap camera SSBO: " << cudaGetErrorString(err) << std::endl;
+        return false;
+    }
+
+    return true;
+}
 /*
 
     if (!cudaSSBO) {

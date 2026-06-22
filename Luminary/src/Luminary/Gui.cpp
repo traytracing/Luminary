@@ -195,9 +195,9 @@ void Gui::DrawRender() {
 
     ImGui::Checkbox("Camera Lock", &settings.cameraRenderLock);
 
-    ImGui::SliderInt("Object Source (from)", &settings.objectSource, -1, settings.objectCount-1);
+    settings.objectSourceChange = ImGui::SliderInt("Object Source (from)", &settings.objectSource, -1, settings.objectCount-1);
     settings.objectSource = std::clamp(settings.objectSource, -1, settings.objectCount-1);
-    ImGui::SliderInt("Object Target (to)", &settings.objectTarget, -1, settings.objectCount-1);
+    settings.objectTargetChange = ImGui::SliderInt("Object Target (to)", &settings.objectTarget, -1, settings.objectCount-1);
     settings.objectTarget = std::clamp(settings.objectTarget, -1, settings.objectCount-1);
 
     ImGui::SliderFloat("FOV degree", &settings.FOVdeg, 30.0f, 110.0f);

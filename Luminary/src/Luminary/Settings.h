@@ -45,8 +45,12 @@ struct Settings {
 	int renderFrame{ -1 };
 	int maxRenderFrame{ -1 };
 	int objectCount{ 0 };
-	int objectSource{ 0 };
-	int objectTarget{ 0 };
+	int objectSource{ -1 };
+	bool objectSourceChange{ false };
+	glm::vec4 objectSourcePosition{};
+	int objectTarget{ -1 };
+	bool objectTargetChange{ false };
+	glm::vec4 objectTargetPosition{};
 	glm::vec4 trailColor{ InitialTrailColor };
 	float trailTime = 2.0f;
 	float trailWidth = 5.0f;

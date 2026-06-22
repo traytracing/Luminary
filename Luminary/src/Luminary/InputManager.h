@@ -32,4 +32,6 @@ private:
     std::vector<std::function<void()>> updateFunctions;
     std::function<bool()> updateData;
     std::function<void()> endVideo;
+    std::function<glm::vec4()> getObjectSourcePosition;
+    std::function<glm::vec4()> getObjectTargetPosition;
 };

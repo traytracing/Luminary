@@ -31,6 +31,8 @@ public:
 	glm::mat4 cameraMatrix{};
 
 	void UpdateMatrix(GLfloat FOVdeg, GLfloat nearPlane, GLfloat farPlane);
+	void FreeCam(GLFWwindow* window);
+	void ObjectCam(GLFWwindow* window);
 	void Inputs(GLFWwindow* window);
 		
 	void UploadMatrix(RenderProgram& renderProgram, const char* uniform);

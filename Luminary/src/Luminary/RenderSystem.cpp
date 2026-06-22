@@ -40,6 +40,13 @@ RenderSystem::RenderSystem() {
 void RenderSystem::Link() {
 	inputManager.updateData = std::bind(&InputDataProcessor::UpdateData, &inputDataProcessor);
 	inputManager.endVideo = std::bind(&VideoManager::End, &videoManager);
+	inputManager.getObjectSourcePosition = [&]() {
+		return inputDataProcessor.cameraObjectPositions.at(2 * (settings.renderFrame - inputDataProcessor.lf.chunk.startRenderFrame));
+	};
+	inputManager.getObjectTargetPosition = [&]() {
+		return inputDataProcessor.cameraObjectPositions.at(2 * (settings.renderFrame - inputDataProcessor.lf.chunk.startRenderFrame) + 1);
+	};
+
 	std::vector<Camera*> cameras;
 	cameras.push_back(&POVCamera);
 	cameras.push_back(&SkyCamera);

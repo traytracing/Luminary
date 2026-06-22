@@ -26,6 +26,7 @@ InputDataProcessor::InputDataProcessor(Settings& settings) : settings(settings) 
 void InputDataProcessor::Reset() {
 	positionSSBOC.Reset();
 	trailSSBOC.Reset();
+	cameraSSBOC.Reset();
 
 	if (fs.is_open()) {
 		fs.close();
@@ -75,7 +76,9 @@ bool InputDataProcessor::UnpackFile() {
 bool InputDataProcessor::UpdateDataChunk(int renderFrame, bool& chunkReloaded) {
 	chunkReloaded = false;
 
-	if (lf.chunk.fps == settings.fps && lf.IsRenderFrameInsideChunk(renderFrame)) {
+	if (lf.chunk.fps == settings.fps && lf.IsRenderFrameInsideChunk(renderFrame)
+		&& !settings.objectSourceChange
+		&& !settings.objectTargetChange) {
 		lf.chunk.renderFrameIndex = renderFrame;
 		return true;
 	}
@@ -100,8 +103,10 @@ void InputDataProcessor::UpdatePositionSSBOC() {
 	int renderFrameCountInChunk = lf.chunk.endRenderFrame - lf.chunk.startRenderFrame;
 	GLsizeiptr ssboSize = GLsizeiptr(renderFrameCountInChunk * lf.objectCount * sizeof(glm::vec4));
 	positionSSBOC.Resize(ssboSize);
-	UpdateChunkDataCuda(positionSSBOC.cudassbo, lf.makeDataChunkCuda());
-
+	cameraSSBOC.Resize(renderFrameCountInChunk * 2 * sizeof(glm::vec4));
+	UpdateChunkDataCuda(positionSSBOC.cudassbo, cameraSSBOC.cudassbo, lf.makeDataChunkCuda(), settings.objectSource, settings.objectTarget);
+	cameraObjectPositions.resize(renderFrameCountInChunk * 2);
+	ReadWholeCameraBufferToCPU(cameraSSBOC.cudassbo, renderFrameCountInChunk, reinterpret_cast<float4*>(cameraObjectPositions.data()), cameraObjectPositions.size());
 
 	for (const auto& program : programs) {
 		program->Activate();
@@ -158,4 +163,3 @@ bool InputDataProcessor::UpdateData() {
 	
 	return true;
 }
-
