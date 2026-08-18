@@ -1,6 +1,12 @@
 # Luminary
 Luminary Synthesis Engine
 
+# Showcase
+
+Video: https://youtu.be/NiRgTe67_To
+
+![Photo](BlackholeSimulationExample.jpg)
+
 
 
 ## License
