@@ -2,12 +2,9 @@
 Luminary Synthesis Engine
 
 # Showcase
-
-Video: https://youtu.be/NiRgTe67_To
-
 ![Photo](BlackholeSimulationExample.jpg)
 
-
+Video: https://youtu.be/NiRgTe67_To
 
 ## License
 
